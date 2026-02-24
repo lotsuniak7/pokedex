@@ -41,3 +41,20 @@ exports.login = async (req, res) => {
         res.status(500).json({ error: "Erreur du serveur" });
     }
 };
+
+exports.catchPokemon = async (req, res) => {
+    try {
+        const userId = req.user.id; // Берем ID из токена (Middleware)
+        const { pokemonId } = req.body;
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { $addToSet: { pokemonCaught: pokemonId } }, // $addToSet добавляет только если такого ID еще нет
+            { new: true }
+        );
+
+        res.status(200).json({ message: "Покемон пойман!", caught: user.pokemonCaught });
+    } catch (error) {
+        res.status(500).json({ error: "Ошибка при поимке" });
+    }
+};
