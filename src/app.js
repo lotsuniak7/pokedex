@@ -8,7 +8,7 @@ const pkmnRoutes = require('./routes/pkmnRoute.js');
 const authRoutes = require('./routes/authRoutes');
 
 // Connectez nos routes avec le préfixe commun /api
-app.use('/api', pkmnRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', pkmnRoutes);
 
 module.exports = app;
