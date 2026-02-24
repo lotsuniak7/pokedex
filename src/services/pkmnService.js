@@ -1,7 +1,17 @@
 const PkmnType = require("../models/PkmnType");
 
-const getPokemonsTypes = () => {
-    return PkmnType;
+// la fonction pour recuperer tous les pokemons
+const getAllPokemons = async () => {
+    return await Pokemon.find();
 }
 
-module.exports = {getPokemonsTypes};
+// Créer nouveau pokemon
+const createPkmn = async (pkmnData) => {
+    return await Pokemon.create(pkmnData);
+};
+
+module.exports = {
+    getPokemonsTypes: require("../models/PkmnType"),
+    getAllPokemons,
+    createPkmn
+};
