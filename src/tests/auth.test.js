@@ -20,7 +20,7 @@ describe('Auth & Permissions', () => {
         await User.deleteMany({});
     });
 
-    it('SHOULD FAIL login with wrong password', async () => {
+    it('LA CONNEXION DOIT ÉCHOUER si le mot de passe est incorrect.', async () => {
         // D'abord créer un user
         await request(app).post('/api/auth/register').send({
             username: 'testuser',
@@ -38,7 +38,7 @@ describe('Auth & Permissions', () => {
         expect(res.body).toHaveProperty('error');
     });
 
-    it('SHOULD NOT allow creating pokemon without ADMIN role', async () => {
+    it('NE DOIT PAS autoriser la création de pokémon sans le rôle ADMIN.', async () => {
         // On crée un copte et on se connecte
         await request(app).post('/api/auth/register').send({
             username: 'trainer',

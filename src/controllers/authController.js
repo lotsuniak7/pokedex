@@ -53,8 +53,8 @@ exports.catchPokemon = async (req, res) => {
             { new: true }
         );
 
-        res.status(200).json({ message: "Покемон пойман!", caught: user.pokemonCaught });
+        res.status(200).json({ message: "Pokemon prise", caught: user.pokemonCaught });
     } catch (error) {
-        res.status(500).json({ error: "Ошибка при поимке" });
+        res.status(500).json({ error: "Erreur lors prise du pokemon" });
     }
 };

@@ -11,4 +11,4 @@ mongoose.connect(MONGO_URI)
             console.log(`Le serveur est lancé sur http://localhost:${PORT}`);
         });
     })
-    .catch(err => console.error('Erreur de connexion à Basse de données:', err));
+    .catch(err => console.error('Erreur de connexion à Base de données:', err));

@@ -4,7 +4,7 @@ module.exports = (requiredRole) => {
         if (req.user && req.user.role === requiredRole) {
             next();
         } else {
-            res.status(403).json({ error: "Доступ запрещен: требуются права администратора" });
+            res.status(403).json({ error: "Acces interdit, tu dois être Admin" });
         }
     };
 };
