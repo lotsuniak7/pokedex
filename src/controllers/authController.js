@@ -44,7 +44,7 @@ exports.login = async (req, res) => {
 
 exports.catchPokemon = async (req, res) => {
     try {
-        const userId = req.user.id; // Берем ID из токена (Middleware)
+        const userId = req.user.id;
         const { pokemonId } = req.body;
 
         const user = await User.findByIdAndUpdate(
