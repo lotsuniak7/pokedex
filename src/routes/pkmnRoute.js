@@ -16,7 +16,7 @@ router.put('/pkmn', adminCheck('ADMIN'), pkmnController.update);
 router.delete('/pkmn', adminCheck('ADMIN'), pkmnController.delete);
 
 // demarches avec les regions
-router.post('/region', adminCheck('ADMIN'), pkmnController.addRegion);
-router.delete('/region', adminCheck('ADMIN'), pkmnController.deleteRegion);
+router.post('/pkmn/region', adminCheck('ADMIN'), pkmnController.addRegion);
+router.delete('/pkmn/region', adminCheck('ADMIN'), pkmnController.deleteRegion);
 
 module.exports = router;
