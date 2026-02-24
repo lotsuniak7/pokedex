@@ -31,7 +31,11 @@ exports.login = async (req, res) => {
 
         // Création du token
         const token = jwt.sign(
-            { id: user._id, role: user.role },
+            {
+                userId: user._id,
+                username: user.username,
+                role: user.role
+            },
             'SECRET_KEY_POKEMON',
             { expiresIn: '24h' }
         );

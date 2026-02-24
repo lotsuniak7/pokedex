@@ -3,6 +3,7 @@ const app = require('../app');
 const mongoose = require('mongoose');
 const User = require('../models/userModel');
 const Pokemon = require('../models/pkmnModel');
+const Trainer = require('../models/trainerModel');
 
 describe('API Pokedex - Tests d\'Intégration', () => {
     let adminToken;
@@ -20,6 +21,7 @@ describe('API Pokedex - Tests d\'Intégration', () => {
     beforeEach(async () => {
         await User.deleteMany({});
         await Pokemon.deleteMany({});
+        await Trainer.deleteMany({});
 
         // Création de l'admin via enregistrement pour le hachage du mot de passe
         await request(app).post('/api/auth/register').send({
@@ -149,5 +151,101 @@ describe('API Pokedex - Tests d\'Intégration', () => {
             .set('Authorization', `Bearer ${trainerToken}`);
 
         expect(res.statusCode).toBe(404);
+    });
+
+    // --- TESTS DU TP 04 (GÉRER LE DRESSEUR) ---
+
+    it('DOIT créer un profil dresseur pour l\'utilisateur connecté (POST /trainer)', async () => {
+        const res = await request(app)
+            .post('/api/trainer')
+            .set('Authorization', `Bearer ${trainerToken}`)
+            .send({
+                trainerName: 'Sacha du Bourg Palette',
+                imgUrl: 'https://example.com/sacha.png'
+            });
+
+        expect(res.statusCode).toBe(201);
+        expect(res.body.username).toBe('trainerTest');
+    });
+
+    it('DOIT récupérer le profil du dresseur actuel (GET /trainer)', async () => {
+        const Trainer = require('../models/trainerModel');
+        await Trainer.create({
+            username: 'trainerTest',
+            trainerName: 'Sacha',
+            imgUrl: 'https://example.com/sacha.png'
+        });
+
+        const res = await request(app)
+            .get('/api/trainer')
+            .set('Authorization', `Bearer ${trainerToken}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.trainerName).toBe('Sacha');
+    });
+
+    it('DOIT ajouter un Pokémon à la liste des captures (POST /trainer/mark)', async () => {
+        const Trainer = require('../models/trainerModel');
+        await Trainer.create({ username: 'trainerTest', trainerName: 'Sacha' });
+
+        const pkmn = await Pokemon.create({ name: 'Pikachu', types: ['ELECTRIC'] });
+
+        const res = await request(app)
+            .post('/api/trainer/mark')
+            .set('Authorization', `Bearer ${trainerToken}`)
+            .send({
+                pokemonId: pkmn._id.toString(),
+                isCaptured: true
+            });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.pkmnCatch).toContain(pkmn._id.toString());
+    });
+
+    it('DOIT ajouter un Pokémon à la liste des vus (POST /trainer/mark)', async () => {
+        const Trainer = require('../models/trainerModel');
+        await Trainer.create({ username: 'trainerTest', trainerName: 'Sacha' });
+
+        const pkmn = await Pokemon.create({ name: 'Mewtwo', types: ['PSYCHIC'] });
+
+        const res = await request(app)
+            .post('/api/trainer/mark')
+            .set('Authorization', `Bearer ${trainerToken}`)
+            .send({
+                pokemonId: pkmn._id.toString(),
+                isCaptured: false
+            });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.pkmnSeen).toContain(pkmn._id.toString());
+    });
+
+    it('DOIT mettre à jour les informations du dresseur (PUT /trainer)', async () => {
+        const Trainer = require('../models/trainerModel');
+        await Trainer.create({ username: 'trainerTest', trainerName: 'Sacha' });
+
+        const res = await request(app)
+            .put('/api/trainer')
+            .set('Authorization', `Bearer ${trainerToken}`)
+            .send({
+                trainerName: 'Sacha Pro'
+            });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.trainerName).toBe('Sacha Pro');
+    });
+
+    it('DOIT supprimer le profil du dresseur (DELETE /trainer)', async () => {
+        const Trainer = require('../models/trainerModel');
+        await Trainer.create({ username: 'trainerTest', trainerName: 'Sacha' });
+
+        const res = await request(app)
+            .delete('/api/trainer')
+            .set('Authorization', `Bearer ${trainerToken}`);
+
+        expect(res.statusCode).toBe(204);
+
+        const check = await Trainer.findOne({ username: 'trainerTest' });
+        expect(check).toBeNull();
     });
 });
