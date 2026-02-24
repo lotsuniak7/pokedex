@@ -52,11 +52,37 @@ const search = async (req, res) => {
     }
 };
 
+const addRegion = async (req, res) => {
+    try {
+        const { regionName, regionPokedexNumber, pkmnID } = req.body;
+
+        const pokemon = await Pokemon.findById(pkmnID);
+        if (!pokemon) {
+            return res.status(404).json({ error: "Pokemon non trouvé" });
+        }
+
+        // Recherche si ce region déjà present
+        const regionIndex = pokemon.regions.findIndex(r => r.regionName === regionName);
+
+        if (regionIndex > -1) {
+            // Si oui, mise à jour le numéro
+            pokemon.regions[regionIndex].regionPokedexNumber = regionPokedexNumber;
+        } else {
+            // Sinon on ajoute
+            pokemon.regions.push({ regionName, regionPokedexNumber });
+        }
+
+        await pokemon.save();
+        res.status(200).json(pokemon);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur lors de l'ajout de la region" });
+    }
+};
+
 // Cela pour que serveur ne tombe pas
 const getOne = async (req, res) => res.status(200).json({ message: "GetOne marche" });
 const update = async (req, res) => res.status(200).json({ message: "Update marche" });
 const deletePkmn = async (req, res) => res.status(204).send();
-const addRegion = async (req, res) => res.status(200).json({ message: "AddRegion marche" });
 const deleteRegion = async (req, res) => res.status(204).send();
 
 module.exports = {
