@@ -1,9 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 
 // les bibliotheques pour la documentation
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+
+app.use(cors())
 
 // c'est middleware, le serveur comprends json
 app.use(express.json());
