@@ -61,7 +61,7 @@
 
                   <div class="w-full bg-[#d0f0d0] border-2 border-green-900/50 rounded-sm mb-2 p-2 flex justify-center relative overflow-hidden">
                     <img
-                        :src="pkmn.picture"
+                        :src="pkmn.imageUrl"
                         :alt="pkmn.name"
                         class="w-20 h-20 object-contain drop-shadow-md transition-all duration-700"
                         :class="{
