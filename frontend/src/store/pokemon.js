@@ -8,6 +8,10 @@ export const usePokemonStore = defineStore('pokemon', {
         searchQuery: '',
         isLoading: false
     }),
+    // ВОТ ТО, ЧТО МЫ СЛУЧАЙНО УДАЛИЛИ:
+    getters: {
+        filteredPokemons: (state) => state.pokemons
+    },
     actions: {
         async fetchPokemons() {
             this.isLoading = true;

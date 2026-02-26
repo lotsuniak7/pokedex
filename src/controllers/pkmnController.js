@@ -11,7 +11,7 @@ const getTypes = (req, res) => {
 
 const getAllPokemons = async (req, res) => {
     try {
-        const pokemons = await pkmnService.getAllPkmn();
+        const pokemons = await pkmnService.getAllPokemons();
         res.status(200).json({ data: pokemons, count: pokemons.length });
     } catch (error) {
         res.status(500).json({ error: "Erreur lors de la réception des Pokémons" });

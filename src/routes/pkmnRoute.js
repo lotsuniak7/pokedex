@@ -8,7 +8,7 @@ const adminCheck = require("../middlewares/roleMiddleware");
 router.use(auth);
 
 router.get('/pkmn/search', pkmnController.search);
-router.get('/pkmn', pkmnController.getOne);
+router.get('/pkmn', pkmnController.getAllPokemons);
 
 // uniquement pour les admins
 router.post('/pkmn', adminCheck('ADMIN'), pkmnController.create);
