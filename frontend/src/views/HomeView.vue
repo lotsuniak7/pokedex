@@ -1,168 +1,211 @@
 <template>
-  <div class="min-h-screen bg-gray-950 flex justify-center py-6 px-4 md:py-10 selection:bg-transparent">
+  <div class="pokedex-root">
 
-    <div class="w-full max-w-4xl bg-gradient-to-br from-red-500 via-red-600 to-red-800 border-[8px] border-red-950 rounded-[3rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8),inset_0_4px_10px_rgba(255,255,255,0.3)] overflow-hidden flex flex-col relative">
+    <!-- POKÉDEX BODY -->
+    <div class="pokedex-body">
 
-      <div class="relative px-6 py-5 flex items-center gap-6 border-b-[6px] border-red-950 shadow-sm before:absolute before:bottom-0 before:left-0 before:w-full before:h-2 before:bg-black/20">
-        <div class="relative w-20 h-20 rounded-full border-[6px] border-gray-200 bg-gradient-to-br from-blue-300 to-blue-700 shadow-[0_0_15px_rgba(0,0,0,0.5),inset_0_-5px_15px_rgba(0,0,0,0.6)] flex-shrink-0 flex items-center justify-center">
-          <div class="w-8 h-8 rounded-full bg-blue-200 opacity-60 absolute top-2 left-2 blur-[2px]"></div>
-          <div class="w-3 h-3 rounded-full bg-white absolute top-4 left-4 shadow-[0_0_5px_white]"></div>
-        </div>
-        <div class="flex gap-3 mb-8">
-          <div class="w-5 h-5 rounded-full bg-gradient-to-br from-red-400 to-red-700 border-2 border-red-950 shadow-[0_0_8px_rgba(220,38,38,0.8)] animate-pulse"></div>
-          <div class="w-5 h-5 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 border-2 border-red-950 shadow-[0_0_5px_rgba(0,0,0,0.5)]"></div>
-          <div class="w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-green-700 border-2 border-red-950 shadow-[0_0_5px_rgba(0,0,0,0.5)]"></div>
-        </div>
-      </div>
+      <!-- TOP PANEL -->
+      <div class="pokedex-top-panel">
+        <div class="pokedex-hinge-left"></div>
 
-      <div class="flex-grow p-6 flex flex-col md:flex-row gap-6">
-
-        <div class="flex-grow bg-gray-200 border-[6px] border-gray-400 rounded-t-xl rounded-bl-xl rounded-br-[3rem] p-5 shadow-[inset_0_5px_15px_rgba(0,0,0,0.3)] relative flex flex-col">
-
-          <div class="flex justify-center gap-4 mb-3">
-            <div class="w-2 h-2 rounded-full bg-gray-400 border border-gray-500"></div>
-            <div class="w-2 h-2 rounded-full bg-gray-400 border border-gray-500"></div>
+        <!-- Lens + indicators -->
+        <div class="top-left-cluster">
+          <div class="big-lens">
+            <div class="lens-inner"></div>
+            <div class="lens-glare-1"></div>
+            <div class="lens-glare-2"></div>
           </div>
+          <div class="indicator-dots">
+            <div class="dot dot-red pulse"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+          </div>
+        </div>
 
-          <div class="relative bg-[#8bcf8b] border-[8px] border-gray-800 rounded-lg flex-grow h-[50vh] md:h-[60vh] overflow-hidden flex flex-col crt-screen shadow-[inset_0_0_30px_rgba(0,60,0,0.4)]">
-
-            <div class="p-3 border-b-4 border-green-800/30 bg-black/10 flex gap-2 z-10">
+        <!-- Screen area TOP -->
+        <div class="top-screen-container">
+          <div class="screen-bezel">
+            <div class="screen-notches">
+              <div class="notch"></div>
+              <div class="notch"></div>
+            </div>
+            <div class="crt-screen search-screen">
               <input
                   v-model="pokemonStore.searchQuery"
                   @input="pokemonStore.fetchPokemons"
                   type="text"
-                  placeholder="> RECHERCHE..."
-                  class="flex-grow bg-transparent border-none text-gray-900 placeholder-gray-700 focus:outline-none retro-font text-2xl uppercase"
+                  placeholder="> RECHERCHE POKÉMON..."
+                  class="search-input retro-font"
+                  spellcheck="false"
               />
+              <div class="search-cursor" :class="{ blink: true }"></div>
             </div>
+          </div>
+        </div>
 
-            <div class="flex-grow p-4 overflow-y-auto retro-scrollbar z-10 relative pb-10">
-              <div v-if="pokemonStore.isLoading" class="h-full flex items-center justify-center retro-font text-3xl animate-pulse text-green-950">
-                CHARGEMENT DU SYSTÈME...
+        <div class="pokedex-hinge-right"></div>
+      </div>
+
+      <!-- DIVIDER -->
+      <div class="pokedex-divider">
+        <div class="divider-line"></div>
+        <div class="divider-circle"></div>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- BOTTOM PANEL -->
+      <div class="pokedex-bottom-panel">
+
+        <!-- LEFT: Main screen with Pokémon grid -->
+        <div class="bottom-left">
+          <div class="main-screen-bezel">
+            <div class="crt-screen main-screen">
+
+              <!-- LOADING -->
+              <div v-if="pokemonStore.isLoading" class="loading-screen retro-font">
+                <div class="loading-text">CHARGEMENT DU SYSTÈME...</div>
+                <div class="loading-bar">
+                  <div class="loading-fill"></div>
+                </div>
               </div>
 
-              <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
+              <!-- POKEMON GRID -->
+              <div v-else class="pokemon-grid">
                 <div
                     v-for="pkmn in pokemonStore.filteredPokemons"
                     :key="pkmn.id"
-                    class="bg-[#a2dca2] border-4 p-3 flex flex-col items-center relative group transition-all duration-300"
-                    :class="isCaught(pkmn.id) ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'border-green-800/40'"
+                    class="pkmn-card"
+                    :class="{
+                    'card-caught': isCaught(pkmn.id),
+                    'card-seen': isSeen(pkmn.id) && !isCaught(pkmn.id),
+                    'card-unknown': isUnknown(pkmn.id)
+                  }"
                 >
-
-                  <div class="absolute top-1 right-2 flex gap-1 z-10">
-                    <span v-if="isCaught(pkmn.id)" class="text-yellow-600 drop-shadow-md text-xl" title="Capturé">★</span>
-                    <span v-else-if="isSeen(pkmn.id)" class="text-blue-600 drop-shadow-md text-sm mt-1" title="Vu">👁</span>
+                  <!-- Status badge -->
+                  <div class="card-status">
+                    <span v-if="isCaught(pkmn.id)" class="badge badge-caught">★</span>
+                    <span v-else-if="isSeen(pkmn.id)" class="badge badge-seen">👁</span>
+                    <span v-else class="badge badge-unknown">?</span>
                   </div>
 
-                  <div class="w-full flex justify-between items-center mb-2">
-                    <span class="retro-font text-lg text-green-950 font-bold">N°{{ pkmn.id.toString().padStart(3, '0') }}</span>
-                  </div>
+                  <!-- ID -->
+                  <div class="card-id retro-font">N°{{ pkmn.id.toString().padStart(3, '0') }}</div>
 
-                  <div class="w-full bg-[#d0f0d0] border-2 border-green-900/50 rounded-sm mb-2 p-2 flex justify-center relative overflow-hidden">
+                  <!-- Image -->
+                  <div class="card-image-wrap">
                     <img
                         :src="pkmn.imageUrl"
                         :alt="pkmn.name"
-                        class="w-20 h-20 object-contain drop-shadow-md transition-all duration-700"
-                        :class="{
-                        'brightness-0 opacity-80 contrast-200': isUnknown(pkmn.id),
-                        'group-hover:scale-110': !isUnknown(pkmn.id)
-                      }"
+                        class="card-image"
+                        :class="{ 'image-silhouette': isUnknown(pkmn.id) }"
                     />
+                    <div v-if="isCaught(pkmn.id)" class="card-caught-overlay"></div>
                   </div>
 
-                  <h3 class="retro-font text-xl text-green-950 uppercase text-center w-full truncate font-bold">
+                  <!-- Name -->
+                  <div class="card-name retro-font">
                     {{ isUnknown(pkmn.id) ? '???' : pkmn.name }}
-                  </h3>
+                  </div>
 
-                  <div class="flex gap-1 mt-1 flex-wrap justify-center mb-3 min-h-[24px]">
+                  <!-- Types -->
+                  <div class="card-types">
                     <template v-if="!isUnknown(pkmn.id)">
-                      <span v-for="type in pkmn.types" :key="type" class="retro-font text-xs px-2 py-0.5 bg-green-900/10 border border-green-900/30 text-green-950">
+                      <span v-for="type in pkmn.types" :key="type" class="type-badge retro-font" :class="`type-${type.toLowerCase()}`">
                         {{ type }}
                       </span>
                     </template>
                     <template v-else>
-                      <span class="retro-font text-xs px-2 py-0.5 text-green-900/60 tracking-widest">
-                        INCONNU
-                      </span>
+                      <span class="type-badge type-unknown retro-font">INCONNU</span>
                     </template>
                   </div>
 
-                  <div class="flex gap-2 w-full mt-auto">
-
+                  <!-- Actions -->
+                  <div class="card-actions">
                     <button
                         v-if="isUnknown(pkmn.id)"
                         @click="markPokemon(pkmn.id, false)"
-                        class="w-full bg-blue-500 text-white retro-font text-sm py-1 border-2 border-blue-800 hover:bg-blue-400 active:translate-y-0.5 shadow-[0_2px_0_#1e3a8a] active:shadow-none transition-all"
-                    >
-                      RENCONTRER (VU)
-                    </button>
+                        class="btn-action btn-encounter retro-font"
+                    >RENCONTRER</button>
 
                     <button
                         v-if="isSeen(pkmn.id) && !isCaught(pkmn.id)"
                         @click="markPokemon(pkmn.id, true)"
-                        class="w-full bg-red-500 text-white retro-font text-sm py-1 border-2 border-red-800 hover:bg-red-400 active:translate-y-0.5 shadow-[0_2px_0_#7f1d1d] active:shadow-none transition-all animate-pulse"
-                    >
-                      CAPTURER !
-                    </button>
+                        class="btn-action btn-catch retro-font"
+                    >⚡ CAPTURER !</button>
 
-                    <div
-                        v-if="isCaught(pkmn.id)"
-                        class="w-full text-center text-green-900 font-bold retro-font text-sm py-1.5 border-2 border-transparent"
-                    >
-                      - DÉJÀ CAPTURÉ -
+                    <div v-if="isCaught(pkmn.id)" class="card-caught-label retro-font">
+                      ✓ CAPTURÉ
                     </div>
-
                   </div>
-
                 </div>
               </div>
-            </div>
 
-            <div class="absolute inset-0 pointer-events-none scanlines opacity-30 z-20"></div>
+              <!-- CRT scanlines overlay -->
+              <div class="scanlines-overlay"></div>
+              <!-- CRT vignette -->
+              <div class="vignette-overlay"></div>
+            </div>
           </div>
 
-          <div class="mt-4 flex justify-between items-center px-4">
-            <div class="w-6 h-6 rounded-full bg-red-600 border-2 border-gray-800 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4)]"></div>
-            <div class="flex flex-col gap-1.5">
-              <div class="w-12 h-1 bg-gray-600 rounded-full shadow-inner"></div>
-              <div class="w-12 h-1 bg-gray-600 rounded-full shadow-inner"></div>
-              <div class="w-12 h-1 bg-gray-600 rounded-full shadow-inner"></div>
-              <div class="w-12 h-1 bg-gray-600 rounded-full shadow-inner"></div>
+          <!-- Bottom screen decorations -->
+          <div class="screen-bottom-deco">
+            <div class="deco-circle deco-red"></div>
+            <div class="deco-lines">
+              <div class="deco-line"></div>
+              <div class="deco-line"></div>
+              <div class="deco-line"></div>
+            </div>
+            <div class="stats-display retro-font">
+              <span class="stat-item">VU: {{ trainerStore.seenIds.length }}</span>
+              <span class="stat-sep">/</span>
+              <span class="stat-item stat-caught">CAPTURÉ: {{ trainerStore.caughtIds.length }}</span>
             </div>
           </div>
         </div>
 
-        <div class="w-full md:w-32 flex flex-col justify-around items-center md:py-10">
+        <!-- RIGHT: Controls -->
+        <div class="controls-panel">
 
+          <!-- Voice button -->
           <button
               @click="startVoiceSearch"
-              :class="isListening ? 'bg-red-400 shadow-[0_0_20px_rgba(248,113,113,0.8),inset_0_-4px_0_rgba(0,0,0,0.3)] translate-y-1' : 'bg-blue-500 shadow-[0_5px_0_rgba(30,58,138,1),0_10px_10px_rgba(0,0,0,0.5),inset_0_4px_4px_rgba(255,255,255,0.4)] hover:bg-blue-400'"
-              class="w-16 h-16 rounded-full border-4 border-gray-900 flex items-center justify-center transition-all active:translate-y-2 active:shadow-[0_0_0_rgba(30,58,138,1)] focus:outline-none"
+              class="btn-voice"
+              :class="{ 'voice-active': isListening }"
               title="Recherche vocale"
           >
-            <svg v-if="!isListening" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg v-if="!isListening" xmlns="http://www.w3.org/2000/svg" class="voice-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
-            <div v-else class="w-6 h-6 bg-white rounded-full animate-ping"></div>
+            <div v-else class="voice-pulse-ring"></div>
           </button>
 
-          <div class="flex gap-4 mt-8 md:mt-0">
-            <button @click="handleLogout" class="w-12 h-4 rounded-full bg-red-600 border-2 border-red-900 shadow-[inset_0_2px_2px_rgba(255,255,255,0.4),0_2px_0_rgba(0,0,0,0.5)] active:translate-y-1 active:shadow-none hover:bg-red-500 cursor-pointer" title="Déconnexion"></button>
-            <button @click="router.push('/profile')" class="w-12 h-4 rounded-full bg-blue-600 border-2 border-blue-900 shadow-[inset_0_2px_2px_rgba(255,255,255,0.4),0_2px_0_rgba(0,0,0,0.5)] active:translate-y-1 active:shadow-none hover:bg-blue-500 cursor-pointer" title="Carte de Dresseur"></button>
+          <!-- Small buttons -->
+          <div class="small-buttons">
+            <button @click="handleLogout" class="small-btn small-btn-red" title="Déconnexion">
+              <span class="retro-font small-btn-label">OFF</span>
+            </button>
+            <button @click="router.push('/profile')" class="small-btn small-btn-blue" title="Carte de Dresseur">
+              <span class="retro-font small-btn-label">ID</span>
+            </button>
           </div>
 
-          <div class="relative w-24 h-24 mt-8 md:mt-0 drop-shadow-xl">
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-24 bg-gray-800 rounded-lg"></div>
-            <div class="absolute top-1/2 left-0 -translate-y-1/2 w-24 h-8 bg-gray-800 rounded-lg"></div>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-gray-900 rounded-full shadow-inner"></div>
-            <div class="absolute top-2 left-1/2 -translate-x-1/2 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-gray-600"></div>
-            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-gray-600"></div>
-            <div class="absolute left-2 top-1/2 -translate-y-1/2 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-r-[6px] border-r-gray-600"></div>
-            <div class="absolute right-2 top-1/2 -translate-y-1/2 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-gray-600"></div>
+          <!-- D-Pad -->
+          <div class="dpad">
+            <div class="dpad-h"></div>
+            <div class="dpad-v"></div>
+            <div class="dpad-center"></div>
+            <div class="dpad-arrow dpad-up">▲</div>
+            <div class="dpad-arrow dpad-down">▼</div>
+            <div class="dpad-arrow dpad-left">◀</div>
+            <div class="dpad-arrow dpad-right">▶</div>
           </div>
+
+          <!-- Speaker grille -->
+          <div class="speaker-grille">
+            <div v-for="i in 7" :key="i" class="speaker-hole"></div>
+          </div>
+
         </div>
-
       </div>
     </div>
   </div>
@@ -179,7 +222,6 @@ const router = useRouter();
 const pokemonStore = usePokemonStore();
 const trainerStore = useTrainerStore();
 const authStore = useAuthStore();
-
 const isListening = ref(false);
 
 onMounted(async () => {
@@ -187,10 +229,9 @@ onMounted(async () => {
   pokemonStore.fetchPokemons();
 });
 
-// Хелперы состояний
 const isCaught = (id) => trainerStore.caughtIds.includes(id);
 const isSeen = (id) => trainerStore.seenIds.includes(id);
-const isUnknown = (id) => !isCaught(id) && !isSeen(id); // Главная фишка: если нет ни там, ни там — он неизвестен!
+const isUnknown = (id) => !isCaught(id) && !isSeen(id);
 
 const markPokemon = async (id, isCaptured) => {
   if (!trainerStore.hasProfile) {
@@ -201,38 +242,845 @@ const markPokemon = async (id, isCaptured) => {
   await trainerStore.markPokemon(id, isCaptured);
 };
 
-const handleLogout = () => {
-  authStore.logout();
-};
+const handleLogout = () => authStore.logout();
 
 const startVoiceSearch = () => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
-    return;
-  }
+  if (!SpeechRecognition) { alert("Votre navigateur ne supporte pas la reconnaissance vocale."); return; }
   const recognition = new SpeechRecognition();
   recognition.lang = 'fr-FR';
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
-
   recognition.onstart = () => { isListening.value = true; };
   recognition.onresult = (event) => {
     pokemonStore.searchQuery = event.results[0][0].transcript.replace(/\.$/, '').trim();
     pokemonStore.fetchPokemons();
   };
-  recognition.onerror = (error) => { console.error(error); isListening.value = false; };
+  recognition.onerror = () => { isListening.value = false; };
   recognition.onend = () => { isListening.value = false; };
-
   recognition.start();
 };
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* ─── ROOT ─── */
+.pokedex-root {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at center, #1a0a0a 0%, #0d0000 100%);
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  overflow: hidden;
+}
+
+/* ─── POKÉDEX BODY ─── */
+.pokedex-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(145deg, #f03030 0%, #cc1a1a 40%, #a80f0f 100%);
+  border: none;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Plastic texture */
+.pokedex-body::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Sheen highlight */
+.pokedex-body::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── TOP PANEL ─── */
+.pokedex-top-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 10px 14px 8px;
+  background: linear-gradient(180deg, rgba(255,100,100,0.2) 0%, rgba(0,0,0,0.15) 100%);
+  border-bottom: 4px solid #6b0000;
+  box-shadow: 0 4px 0 rgba(255,255,255,0.08) inset, 0 6px 12px rgba(0,0,0,0.4);
+  min-height: 80px;
+}
+
+.pokedex-hinge-left, .pokedex-hinge-right {
+  width: 18px;
+  flex-shrink: 0;
+}
+
+/* ─── TOP-LEFT CLUSTER ─── */
+.top-left-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-right: 14px;
+}
+
+.big-lens {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #90c8f8, #1a5bb8 60%, #0a2a6e 100%);
+  border: 5px solid #e8e8e8;
+  box-shadow:
+      0 0 0 3px #9a9a9a,
+      0 0 20px rgba(30, 120, 220, 0.7),
+      inset 0 4px 12px rgba(0,0,0,0.4);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.lens-inner {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.lens-glare-1 {
+  position: absolute;
+  top: 8px; left: 8px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, transparent 70%);
+}
+
+.lens-glare-2 {
+  position: absolute;
+  bottom: 10px; right: 10px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+}
+
+.indicator-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.4);
+  box-shadow: inset 0 2px 3px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.dot-red { background: radial-gradient(circle at 35% 35%, #ff6060, #cc0000); box-shadow: 0 0 8px rgba(255,0,0,0.6), inset 0 2px 3px rgba(255,255,255,0.4); }
+.dot-yellow { background: radial-gradient(circle at 35% 35%, #ffe060, #c8a000); }
+.dot-green { background: radial-gradient(circle at 35% 35%, #60ff90, #00aa40); }
+.pulse { animation: pulse-glow 1.5s ease-in-out infinite; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,0,0,0.6), inset 0 2px 3px rgba(255,255,255,0.4); }
+  50% { box-shadow: 0 0 18px rgba(255,0,0,0.9), 0 0 30px rgba(255,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.4); }
+}
+
+/* ─── TOP SCREEN (search) ─── */
+.top-screen-container {
+  flex: 1;
+}
+
+.screen-bezel {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.7), 0 2px 4px rgba(255,255,255,0.1);
+}
+
+.screen-notches {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.notch {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #444;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.crt-screen {
+  background: #7dbf7d;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.search-screen {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  gap: 8px;
+  background: linear-gradient(180deg, #92d492 0%, #7dbf7d 100%);
+  min-height: 44px;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #1a4a1a;
+  font-size: clamp(18px, 2.5vw, 26px);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.search-input::placeholder {
+  color: #3a7a3a;
+  opacity: 0.7;
+}
+
+/* ─── DIVIDER ─── */
+.pokedex-divider {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  height: 24px;
+  background: #8b0000;
+  border-top: 3px solid #5a0000;
+  border-bottom: 3px solid #5a0000;
+  position: relative;
+  z-index: 1;
+}
+
+.divider-line {
+  flex: 1;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #c04040, transparent);
+}
+
+.divider-circle {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #ff8080, #cc0000 50%, #7a0000 100%);
+  border: 3px solid #5a0000;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.3);
+  margin: 0 12px;
+}
+
+/* ─── BOTTOM PANEL ─── */
+.pokedex-bottom-panel {
+  flex: 1;
+  display: flex;
+  gap: 0;
+  padding: 10px 14px 12px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+}
+
+/* ─── BOTTOM LEFT (main screen) ─── */
+.bottom-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.main-screen-bezel {
+  flex: 1;
+  background: #2a2a2a;
+  border-radius: 12px 12px 12px 40px;
+  padding: 8px;
+  box-shadow:
+      inset 0 4px 10px rgba(0,0,0,0.8),
+      inset 0 -2px 4px rgba(255,255,255,0.06),
+      0 2px 4px rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.main-screen {
+  flex: 1;
+  border-radius: 6px 6px 6px 34px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: linear-gradient(180deg, #8fd48f 0%, #7dc87d 100%);
+  box-shadow: inset 0 0 40px rgba(0,60,0,0.35);
+}
+
+/* ─── LOADING ─── */
+.loading-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  color: #1a4a1a;
+}
+
+.loading-text {
+  font-size: clamp(20px, 3vw, 32px);
+  animation: blink 1s step-end infinite;
+}
+
+.loading-bar {
+  width: 60%;
+  height: 12px;
+  background: rgba(0,60,0,0.2);
+  border: 2px solid #2a6a2a;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loading-fill {
+  height: 100%;
+  background: #2a6a2a;
+  animation: load 2s ease-in-out infinite;
+}
+
+@keyframes load {
+  0% { width: 0%; }
+  70% { width: 100%; }
+  100% { width: 100%; }
+}
+
+/* ─── POKEMON GRID ─── */
+.pokemon-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #2f6f2f #a8dfa8;
+  align-content: start;
+}
+
+.pokemon-grid::-webkit-scrollbar { width: 10px; }
+.pokemon-grid::-webkit-scrollbar-track { background: rgba(0,50,0,0.15); }
+.pokemon-grid::-webkit-scrollbar-thumb { background: #2f6f2f; border: 2px solid #7dc87d; border-radius: 4px; }
+
+/* ─── POKEMON CARD ─── */
+.pkmn-card {
+  background: #a2dca2;
+  border: 3px solid rgba(0,80,0,0.35);
+  border-radius: 4px;
+  padding: 10px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: default;
+}
+
+.pkmn-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,60,0,0.25);
+}
+
+.card-caught {
+  border-color: #d4a000 !important;
+  background: linear-gradient(135deg, #b0e8b0, #c8e8a0);
+  box-shadow: 0 0 10px rgba(212,160,0,0.4);
+}
+
+.card-seen {
+  border-color: #4080c0 !important;
+  background: #a8d0e8;
+}
+
+.card-unknown {
+  background: #90c090;
+  opacity: 0.85;
+}
+
+/* Status badge */
+.card-status {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+}
+
+.badge {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.badge-caught { color: #c09000; filter: drop-shadow(0 0 3px rgba(255,180,0,0.6)); }
+.badge-seen { font-size: 11px; }
+.badge-unknown { color: #666; font-family: 'VT323', monospace; font-size: 16px; }
+
+/* ID */
+.card-id {
+  font-size: clamp(14px, 1.8vw, 18px);
+  color: #1a5a1a;
+  font-weight: bold;
+  align-self: flex-start;
+  margin-bottom: 4px;
+}
+
+/* Image */
+.card-image-wrap {
+  background: rgba(210,240,210,0.6);
+  border: 2px solid rgba(0,80,0,0.2);
+  border-radius: 2px;
+  padding: 6px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-image {
+  width: clamp(56px, 8vw, 96px);
+  height: clamp(56px, 8vw, 96px);
+  object-fit: contain;
+  transition: transform 0.3s ease;
+  image-rendering: pixelated;
+}
+
+.pkmn-card:not(.card-unknown):hover .card-image {
+  transform: scale(1.12);
+}
+
+.image-silhouette {
+  filter: brightness(0) contrast(200%) opacity(0.75) !important;
+}
+
+.card-caught-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(255,200,0,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Name */
+.card-name {
+  font-size: clamp(16px, 2.2vw, 22px);
+  color: #1a4a1a;
+  text-transform: uppercase;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* Types */
+.card-types {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 22px;
+  margin-bottom: 6px;
+}
+
+.type-badge {
+  font-size: clamp(11px, 1.3vw, 14px);
+  padding: 1px 6px;
+  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: rgba(0,80,0,0.12);
+  color: #1a4a1a;
+  white-space: nowrap;
+}
+
+.type-unknown { color: #556a55; background: transparent; border-color: transparent; letter-spacing: 0.15em; }
+
+/* Type colors */
+.type-feu    { background: rgba(220,60,0,0.18); color: #8b2000; border-color: rgba(220,60,0,0.3); }
+.type-eau    { background: rgba(0,100,220,0.15); color: #003880; border-color: rgba(0,100,220,0.3); }
+.type-plante { background: rgba(0,150,40,0.15); color: #004020; border-color: rgba(0,150,40,0.3); }
+.type-poison { background: rgba(140,0,160,0.15); color: #500060; border-color: rgba(140,0,160,0.3); }
+.type-vol    { background: rgba(80,120,200,0.15); color: #203080; border-color: rgba(80,120,200,0.3); }
+.type-normal { background: rgba(100,100,80,0.15); color: #404030; border-color: rgba(100,100,80,0.3); }
+
+/* Actions */
+.card-actions {
+  width: 100%;
+  margin-top: auto;
+}
+
+.btn-action {
+  width: 100%;
+  padding: 4px 6px;
+  border: 2px solid;
+  border-radius: 2px;
+  font-size: clamp(12px, 1.5vw, 16px);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  letter-spacing: 0.04em;
+}
+
+.btn-action:active { transform: translateY(2px); }
+
+.btn-encounter {
+  background: #3060c0;
+  color: white;
+  border-color: #1a3a80;
+  box-shadow: 0 3px 0 #1a3a80;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.btn-encounter:hover { background: #4070d0; }
+.btn-encounter:active { box-shadow: none; }
+
+.btn-catch {
+  background: #cc2020;
+  color: white;
+  border-color: #7a0000;
+  box-shadow: 0 3px 0 #7a0000;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  animation: catch-pulse 1.2s ease-in-out infinite;
+}
+.btn-catch:hover { background: #dd3030; }
+.btn-catch:active { box-shadow: none; }
+
+@keyframes catch-pulse {
+  0%, 100% { box-shadow: 0 3px 0 #7a0000, 0 0 0 rgba(220,32,32,0); }
+  50% { box-shadow: 0 3px 0 #7a0000, 0 0 8px rgba(220,32,32,0.5); }
+}
+
+.card-caught-label {
+  text-align: center;
+  color: #1a6a1a;
+  font-size: clamp(12px, 1.5vw, 16px);
+  padding: 4px;
+  border: 2px solid transparent;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+}
+
+/* ─── SCREEN OVERLAYS ─── */
+.scanlines-overlay {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.06) 0px,
+      rgba(0,0,0,0.06) 1px,
+      transparent 1px,
+      transparent 3px
+  );
+  pointer-events: none;
+  z-index: 20;
+}
+
+.vignette-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,40,0,0.25) 100%);
+  pointer-events: none;
+  z-index: 21;
+}
+
+/* ─── SCREEN BOTTOM DECO ─── */
+.screen-bottom-deco {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px;
+}
+
+.deco-circle {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 2px 3px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.deco-red { background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000); }
+
+.deco-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.deco-line {
+  width: 20px; height: 2px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 1px;
+}
+
+.stats-display {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: rgba(255,255,255,0.8);
+  font-size: clamp(12px, 1.5vw, 16px);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.stat-caught { color: #ffd060; }
+.stat-sep { color: rgba(255,255,255,0.4); }
+
+/* ─── CONTROLS PANEL ─── */
+.controls-panel {
+  width: 110px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 6px;
+  gap: 0;
+}
+
+/* Voice button */
+.btn-voice {
+  width: 62px; height: 62px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #6090ee, #2040b0 70%, #102080 100%);
+  border: 4px solid #0a1a60;
+  box-shadow:
+      0 5px 0 #0a1a60,
+      0 7px 15px rgba(0,0,0,0.5),
+      inset 0 3px 5px rgba(255,255,255,0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+  flex-shrink: 0;
+}
+
+.btn-voice:hover { background: radial-gradient(circle at 40% 35%, #70a0ff, #3050c0 70%, #1830a0 100%); }
+.btn-voice:active { transform: translateY(4px); box-shadow: 0 1px 0 #0a1a60, 0 2px 5px rgba(0,0,0,0.5), inset 0 3px 5px rgba(255,255,255,0.2); }
+
+.voice-active {
+  background: radial-gradient(circle at 40% 35%, #ff9090, #cc3030 70%) !important;
+  border-color: #600a0a !important;
+  box-shadow: 0 0 20px rgba(255,60,60,0.7), 0 5px 0 #600a0a, inset 0 3px 5px rgba(255,255,255,0.2) !important;
+}
+
+.voice-icon { width: 30px; height: 30px; color: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+
+.voice-pulse-ring {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: white;
+  animation: ping 0.8s ease-out infinite;
+}
+
+@keyframes ping {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Small buttons */
+.small-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.small-btn {
+  width: 42px; height: 16px;
+  border-radius: 8px;
+  border: 2px solid;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.3);
+  transition: all 0.1s;
+}
+
+.small-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.4); }
+
+.small-btn-red { background: linear-gradient(180deg, #ff6060, #cc1a1a); border-color: #7a0000; }
+.small-btn-blue { background: linear-gradient(180deg, #6090ee, #1a40cc); border-color: #0a1a7a; }
+
+.small-btn-label {
+  font-family: 'VT323', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  letter-spacing: 0.05em;
+}
+
+/* D-Pad */
+.dpad {
+  width: 88px; height: 88px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dpad-h, .dpad-v {
+  position: absolute;
+  background: linear-gradient(180deg, #3a3a3a, #222);
+  border-radius: 4px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.dpad-h {
+  left: 0; top: 50%;
+  width: 100%; height: 30px;
+  transform: translateY(-50%);
+}
+
+.dpad-v {
+  top: 0; left: 50%;
+  width: 30px; height: 100%;
+  transform: translateX(-50%);
+}
+
+.dpad-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 30px; height: 30px;
+  transform: translate(-50%, -50%);
+  background: #2a2a2a;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.dpad-arrow {
+  position: absolute;
+  color: #555;
+  font-size: 12px;
+  z-index: 3;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dpad-up { top: 4px; left: 50%; transform: translateX(-50%); }
+.dpad-down { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.dpad-left { left: 4px; top: 50%; transform: translateY(-50%); }
+.dpad-right { right: 4px; top: 50%; transform: translateY(-50%); }
+
+/* Speaker grille */
+.speaker-grille {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
+  align-self: flex-end;
+  margin-right: 6px;
+}
+
+.speaker-hole {
+  width: 28px; height: 4px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 .retro-font { font-family: 'VT323', monospace; letter-spacing: 0.05em; }
-.scanlines { background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1)); background-size: 100% 4px; }
-.retro-scrollbar::-webkit-scrollbar { width: 12px; }
-.retro-scrollbar::-webkit-scrollbar-track { background: rgba(0, 50, 0, 0.1); border-left: 2px solid rgba(0,0,0,0.1); }
-.retro-scrollbar::-webkit-scrollbar-thumb { background: #2f6f2f; border: 2px solid #8bcf8b; }
+
+/* ─── RESPONSIVE ─── */
+
+/* Large desktop: 3 cols for grid */
+@media (min-width: 1200px) {
+  .pokemon-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px; }
+  .card-image { width: 250px; height: 250px; }
+  .controls-panel { width: 130px; }
+  .big-lens { width: 70px; height: 70px; }
+  .top-left-cluster { margin-right: 20px; }
+  .pokedex-top-panel { padding: 14px 20px 10px; min-height: 100px; }
+}
+
+/* Medium desktop: 2 cols */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .pokemon-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .card-image { width: 150px; height: 150px; }
+  .controls-panel { width: 120px; }
+}
+
+/* Tablet */
+@media (max-width: 767px) {
+  .pokedex-top-panel {
+    padding: 8px 10px 6px;
+    min-height: 68px;
+  }
+  .big-lens { width: 50px; height: 50px; }
+  .indicator-dots { gap: 4px; }
+  .dot { width: 10px; height: 10px; }
+  .top-left-cluster { margin-right: 10px; }
+
+  .pokedex-bottom-panel { padding: 8px 10px 10px; gap: 0; }
+
+  .pokemon-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    padding: 8px;
+  }
+
+  .card-image { width: 100px; height: 100px; }
+  .controls-panel { width: 80px; }
+  .btn-voice { width: 50px; height: 50px; }
+  .voice-icon { width: 24px; height: 24px; }
+  .dpad { width: 70px; height: 70px; }
+  .dpad-h { height: 24px; }
+  .dpad-v { width: 24px; }
+  .small-btn { width: 34px; }
+  .speaker-grille { gap: 4px; }
+  .speaker-hole { width: 22px; height: 3px; }
+}
+
+/* Mobile small */
+@media (max-width: 480px) {
+  .pokemon-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 6px;
+  }
+  .card-image { width: 80px; height: 80px; }
+  .pkmn-card { padding: 7px 6px 6px; }
+  .card-name { font-size: 15px; }
+  .card-id { font-size: 13px; }
+  .btn-action { font-size: 12px; padding: 3px 4px; }
+  .controls-panel { width: 72px; }
+  .btn-voice { width: 44px; height: 44px; }
+  .dpad { width: 60px; height: 60px; }
+  .dpad-h { height: 20px; }
+  .dpad-v { width: 20px; }
+  .dpad-center { width: 20px; height: 20px; }
+  .small-btn { width: 28px; height: 13px; }
+  .small-btn-label { font-size: 9px; }
+  .speaker-hole { width: 18px; }
+  .stats-display { font-size: 12px; gap: 4px; }
+}
 </style>
