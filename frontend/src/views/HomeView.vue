@@ -1,14 +1,11 @@
 <template>
   <div class="pokedex-root">
 
-    <!-- POKÉDEX BODY -->
     <div class="pokedex-body">
 
-      <!-- TOP PANEL -->
       <div class="pokedex-top-panel">
         <div class="pokedex-hinge-left"></div>
 
-        <!-- Lens + indicators -->
         <div class="top-left-cluster">
           <div class="big-lens">
             <div class="lens-inner"></div>
@@ -22,7 +19,6 @@
           </div>
         </div>
 
-        <!-- Screen area TOP -->
         <div class="top-screen-container">
           <div class="screen-bezel">
             <div class="screen-notches">
@@ -46,22 +42,18 @@
         <div class="pokedex-hinge-right"></div>
       </div>
 
-      <!-- DIVIDER -->
       <div class="pokedex-divider">
         <div class="divider-line"></div>
         <div class="divider-circle"></div>
         <div class="divider-line"></div>
       </div>
 
-      <!-- BOTTOM PANEL -->
       <div class="pokedex-bottom-panel">
 
-        <!-- LEFT: Main screen with Pokémon grid -->
         <div class="bottom-left">
           <div class="main-screen-bezel">
             <div class="crt-screen main-screen">
 
-              <!-- LOADING -->
               <div v-if="pokemonStore.isLoading" class="loading-screen retro-font">
                 <div class="loading-text">CHARGEMENT DU SYSTÈME...</div>
                 <div class="loading-bar">
@@ -69,7 +61,6 @@
                 </div>
               </div>
 
-              <!-- POKEMON GRID -->
               <div v-else class="pokemon-grid">
                 <div
                     v-for="pkmn in pokemonStore.filteredPokemons"
@@ -81,18 +72,18 @@
                     'card-unknown': isUnknown(pkmn.id)
                   }"
                 >
-                  <!-- Status badge -->
                   <div class="card-status">
                     <span v-if="isCaught(pkmn.id)" class="badge badge-caught">★</span>
                     <span v-else-if="isSeen(pkmn.id)" class="badge badge-seen">👁</span>
                     <span v-else class="badge badge-unknown">?</span>
                   </div>
 
-                  <!-- ID -->
                   <div class="card-id retro-font">N°{{ pkmn.id.toString().padStart(3, '0') }}</div>
 
-                  <!-- Image -->
-                  <div class="card-image-wrap">
+                  <div class="card-image-wrap"
+                       @click="isCaught(pkmn.id) ? selectedPkmn = pkmn : null"
+                       :style="isCaught(pkmn.id) ? 'cursor: pointer;' : ''"
+                       :title="isCaught(pkmn.id) ? 'Afficher les données' : ''">
                     <img
                         :src="pkmn.imageUrl"
                         :alt="pkmn.name"
@@ -102,12 +93,10 @@
                     <div v-if="isCaught(pkmn.id)" class="card-caught-overlay"></div>
                   </div>
 
-                  <!-- Name -->
                   <div class="card-name retro-font">
                     {{ isUnknown(pkmn.id) ? '???' : pkmn.name }}
                   </div>
 
-                  <!-- Types -->
                   <div class="card-types">
                     <template v-if="!isUnknown(pkmn.id)">
                       <span v-for="type in pkmn.types" :key="type" class="type-badge retro-font" :class="`type-${type.toLowerCase()}`">
@@ -119,7 +108,6 @@
                     </template>
                   </div>
 
-                  <!-- Actions -->
                   <div class="card-actions">
                     <button
                         v-if="isUnknown(pkmn.id)"
@@ -140,14 +128,26 @@
                 </div>
               </div>
 
-              <!-- CRT scanlines overlay -->
+              <div v-if="selectedPkmn" class="pkmn-modal-overlay" @click="closeDetails">
+                <div class="pkmn-modal" @click.stop>
+                  <div class="modal-header">
+                    <span class="retro-font">N°{{ selectedPkmn.id.toString().padStart(3, '0') }}</span>
+                    <button class="btn-close retro-font" @click="closeDetails">X</button>
+                  </div>
+                  <img :src="selectedPkmn.imageUrl" class="modal-image" />
+                  <h2 class="retro-font modal-name">{{ selectedPkmn.name }}</h2>
+                  <div class="modal-types">
+                    <span v-for="type in selectedPkmn.types" :key="type" class="type-badge retro-font" :class="`type-${type.toLowerCase()}`">{{ type }}</span>
+                  </div>
+                  <p class="retro-font modal-desc">{{ selectedPkmn.description }}</p>
+                </div>
+              </div>
+
               <div class="scanlines-overlay"></div>
-              <!-- CRT vignette -->
               <div class="vignette-overlay"></div>
             </div>
           </div>
 
-          <!-- Bottom screen decorations -->
           <div class="screen-bottom-deco">
             <div class="deco-circle deco-red"></div>
             <div class="deco-lines">
@@ -163,10 +163,8 @@
           </div>
         </div>
 
-        <!-- RIGHT: Controls -->
         <div class="controls-panel">
 
-          <!-- Voice button -->
           <button
               @click="startVoiceSearch"
               class="btn-voice"
@@ -179,7 +177,6 @@
             <div v-else class="voice-pulse-ring"></div>
           </button>
 
-          <!-- Small buttons -->
           <div class="small-buttons">
             <button @click="handleLogout" class="small-btn small-btn-red" title="Déconnexion">
               <span class="retro-font small-btn-label">OFF</span>
@@ -189,7 +186,6 @@
             </button>
           </div>
 
-          <!-- D-Pad -->
           <div class="dpad">
             <div class="dpad-h"></div>
             <div class="dpad-v"></div>
@@ -200,7 +196,6 @@
             <div class="dpad-arrow dpad-right">▶</div>
           </div>
 
-          <!-- Speaker grille -->
           <div class="speaker-grille">
             <div v-for="i in 7" :key="i" class="speaker-hole"></div>
           </div>
@@ -223,6 +218,10 @@ const pokemonStore = usePokemonStore();
 const trainerStore = useTrainerStore();
 const authStore = useAuthStore();
 const isListening = ref(false);
+
+// Состояние для выбранного покемона (для модалки)
+const selectedPkmn = ref(null);
+const closeDetails = () => { selectedPkmn.value = null; };
 
 onMounted(async () => {
   await trainerStore.fetchProfile();
@@ -782,6 +781,86 @@ const startVoiceSearch = () => {
   border: 2px solid transparent;
   font-weight: bold;
   letter-spacing: 0.06em;
+}
+
+/* ─── MODAL DETAILS ─── */
+.pkmn-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 40, 0, 0.85);
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.pkmn-modal {
+  background: #8fd48f;
+  border: 4px solid #1a4a1a;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 320px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,60,0,0.2);
+}
+
+.modal-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  color: #1a4a1a;
+  font-size: clamp(18px, 2.5vw, 22px);
+  border-bottom: 2px solid #1a4a1a;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: #cc2020;
+  cursor: pointer;
+  font-weight: bold;
+}
+.btn-close:hover { transform: scale(1.2); }
+
+.modal-image {
+  width: clamp(80px, 15vw, 130px);
+  height: clamp(80px, 15vw, 130px);
+  object-fit: contain;
+  image-rendering: pixelated;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+}
+
+.modal-name {
+  font-size: clamp(22px, 3.5vw, 28px);
+  color: #1a4a1a;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.modal-types {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.modal-desc {
+  font-size: clamp(14px, 2vw, 18px);
+  line-height: 1.3;
+  color: #1a4a1a;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px dashed #1a4a1a;
+  width: 100%;
 }
 
 /* ─── SCREEN OVERLAYS ─── */
