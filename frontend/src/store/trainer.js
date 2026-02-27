@@ -20,7 +20,7 @@ export const useTrainerStore = defineStore('trainer', {
                 this.profile = response.data;
             } catch (error) {
                 if (error.response && error.response.status === 404) {
-                    // Профиля еще нет, нужно будет создать
+                    // Il n'y a pas encore de profil, il faudra en créer un.
                     this.profile = null;
                 } else {
                     console.error("Erreur lors de la récupération du profil", error);

@@ -8,7 +8,7 @@ export const usePokemonStore = defineStore('pokemon', {
         searchQuery: '',
         isLoading: false
     }),
-    // ВОТ ТО, ЧТО МЫ СЛУЧАЙНО УДАЛИЛИ:
+
     getters: {
         filteredPokemons: (state) => state.pokemons
     },
@@ -16,7 +16,7 @@ export const usePokemonStore = defineStore('pokemon', {
         async fetchPokemons() {
             this.isLoading = true;
             try {
-                // Если есть строка поиска, дергаем роут поиска
+                // S'il y a une barre de recherche, cliquez dessus.
                 if (this.searchQuery.trim().length > 0) {
                     const response = await api.get(`/pkmn/search?partialName=${encodeURIComponent(this.searchQuery)}`);
                     this.pokemons = response.data.data || response.data;
@@ -27,7 +27,7 @@ export const usePokemonStore = defineStore('pokemon', {
                 }
             } catch (error) {
                 console.error("Erreur API Pokedex:", error);
-                this.pokemons = []; // Если ошибка или нет токена — пустой список
+                this.pokemons = []
             } finally {
                 this.isLoading = false;
             }

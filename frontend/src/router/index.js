@@ -35,7 +35,6 @@ router.beforeEach((to, from) => {
     } else if (to.name === 'Login' && authStore.isAuthenticated) {
         return '/';
     }
-    // Если возвращаем undefined (ничего), роутер пускает дальше (аналог next())
 });
 
 export default router;

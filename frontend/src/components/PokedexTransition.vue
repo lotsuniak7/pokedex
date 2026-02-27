@@ -3,14 +3,14 @@
     <div class="stage" ref="stageRef">
 
       <!-- ══════════════════════════════════════════
-           BACKGROUND — dark void with subtle grid
+           BACKGROUND
       ══════════════════════════════════════════ -->
       <div class="void-bg">
         <div class="grid-lines"></div>
       </div>
 
       <!-- ══════════════════════════════════════════
-           ENERGY PARTICLES — fly out on flash
+           ENERGY PARTICLES
       ══════════════════════════════════════════ -->
       <div class="particles" :class="{ burst: phase >= 2 }">
         <div v-for="i in 12" :key="i" class="particle" :style="particleStyle(i)"></div>
@@ -68,7 +68,7 @@
       </div>
 
       <!-- ══════════════════════════════════════════
-           BIG POKÉDEX — unfolds after flash
+           BIG POKÉDEX
       ══════════════════════════════════════════ -->
       <div
           class="big-wrap"
