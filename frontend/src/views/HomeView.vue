@@ -81,7 +81,7 @@
                   <div class="card-id retro-font">N°{{ pkmn.id.toString().padStart(3, '0') }}</div>
 
                   <div class="card-image-wrap"
-                       @click="isCaught(pkmn.id) ? selectedPkmn = pkmn : null"
+                       @click="isCaught(pkmn.id) ? openDetails(pkmn) : null"
                        :style="isCaught(pkmn.id) ? 'cursor: pointer;' : ''"
                        :title="isCaught(pkmn.id) ? 'Afficher les données' : ''">
                     <img
@@ -166,12 +166,12 @@
         <div class="controls-panel">
 
           <button
-              @click="startVoiceSearch"
+              @click="toggleVoice"
               class="btn-voice"
-              :class="{ 'voice-active': isListening }"
-              title="Recherche vocale"
+              :class="{ 'voice-active': isVoiceEnabled }"
+              title="Activer/Désactiver la voix"
           >
-            <svg v-if="!isListening" xmlns="http://www.w3.org/2000/svg" class="voice-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg v-if="!isVoiceEnabled" xmlns="http://www.w3.org/2000/svg" class="voice-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
             <div v-else class="voice-pulse-ring"></div>
@@ -217,15 +217,22 @@ const router = useRouter();
 const pokemonStore = usePokemonStore();
 const trainerStore = useTrainerStore();
 const authStore = useAuthStore();
-const isListening = ref(false);
 
-// Состояние для выбранного покемона (для модалки)
+// Status de Activer/Desactiver la voix
+const isVoiceEnabled = ref(false);
+
+// Etat du modele
 const selectedPkmn = ref(null);
-const closeDetails = () => { selectedPkmn.value = null; };
+
+// Gardons le son du cri afin de pouvoir l'arrêter
+let currentCry = null;
 
 onMounted(async () => {
   await trainerStore.fetchProfile();
   pokemonStore.fetchPokemons();
+
+  // demande au navigateur de charger les voix à l'avance
+  window.speechSynthesis.getVoices();
 });
 
 const isCaught = (id) => trainerStore.caughtIds.includes(id);
@@ -243,27 +250,97 @@ const markPokemon = async (id, isCaptured) => {
 
 const handleLogout = () => authStore.logout();
 
-const startVoiceSearch = () => {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { alert("Votre navigateur ne supporte pas la reconnaissance vocale."); return; }
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'fr-FR';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  recognition.onstart = () => { isListening.value = true; };
-  recognition.onresult = (event) => {
-    pokemonStore.searchQuery = event.results[0][0].transcript.replace(/\.$/, '').trim();
-    pokemonStore.fetchPokemons();
-  };
-  recognition.onerror = () => { isListening.value = false; };
-  recognition.onend = () => { isListening.value = false; };
-  recognition.start();
+// Activer/Desactiver le son
+const toggleVoice = () => {
+  isVoiceEnabled.value = !isVoiceEnabled.value;
+
+  if (!isVoiceEnabled.value) {
+    if (currentCry) {
+      currentCry.pause();
+      currentCry.currentTime = 0;
+    }
+    window.speechSynthesis.cancel();
+  }
+};
+
+// OUVRONS LA FENÊTRE MODAL ET LANCONS LE SON
+const openDetails = (pkmn) => {
+  selectedPkmn.value = pkmn;
+
+  if (currentCry) {
+    currentCry.pause();
+    currentCry.currentTime = 0;
+  }
+  window.speechSynthesis.cancel();
+
+  if (isVoiceEnabled.value) {
+    // Télécharger le cri
+    const cryUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${pkmn.id}.ogg`;
+
+    currentCry = new Audio(cryUrl);
+    currentCry.volume = 0.2;
+
+    // Preparons le texte
+    const textToSpeak = `${pkmn.name}. ${pkmn.description || 'Description non disponible.'}`;
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = 'fr-FR';
+    utterance.pitch = 0.7;
+    utterance.rate = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const frenchVoices = voices.filter(v => v.lang.startsWith('fr'));
+
+    const premiumVoice = frenchVoices.find(v =>
+        v.name.includes('Google') ||
+        v.name.includes('Premium') ||
+        v.name.includes('Thomas') ||
+        v.name.includes('Amelie')
+    );
+
+    if (premiumVoice) {
+      utterance.voice = premiumVoice;
+      console.log('Une belle voix a été trouvée:', premiumVoice.name);
+    } else if (frenchVoices.length > 0) {
+      utterance.voice = frenchVoices[0];
+      console.log('Aucune bonne voix trouvée, utilisons la voix standard:', frenchVoices[0].name);
+    } else {
+      console.warn('Les voix françaises ne sont pas disponibles dans le système!');
+    }
+    // --------------------------
+
+    // Accrochons les auditeurs d'événements au lecteur
+    utterance.onstart = () => console.log('Le lecteur a COMMENCÉ à lire le texte.');
+    utterance.onend = () => console.log('Le lecteur a fini de lire le texte.');
+    utterance.onerror = (e) => console.error('Erreur du lecteur:', e);
+
+    // Événement : quand le cri s'arrête
+    currentCry.onended = () => {
+      window.speechSynthesis.speak(utterance);
+    };
+
+    // Lancer le cri
+    currentCry.play()
+        .then(() => console.log('Le cri a été reproduit avec succès.!'))
+        .catch(e => console.error('Erreur le navigateur a bloqué le cri. Raison :', e));
+
+  } else {
+    //console.log('Le son est coupé. Ouvrons le dossier en silence..');
+  }
+};
+
+// Fermer L'onglet
+const closeDetails = () => {
+  selectedPkmn.value = null;
+  if (currentCry) {
+    currentCry.pause();
+    currentCry.currentTime = 0;
+  }
+  window.speechSynthesis.cancel();
 };
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
 /* ─── ROOT ─── */
 .pokedex-root {
   width: 100vw;
