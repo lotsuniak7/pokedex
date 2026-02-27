@@ -53,7 +53,7 @@ exports.catchPokemon = async (req, res) => {
 
         const user = await User.findByIdAndUpdate(
             userId,
-            { $addToSet: { pokemonCaught: pokemonId } }, // $addToSet добавляет только если такого ID еще нет
+            { $addToSet: { pokemonCaught: pokemonId } },
             { new: true }
         );
 

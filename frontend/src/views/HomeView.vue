@@ -182,7 +182,7 @@
               <span class="retro-font small-btn-label">OFF</span>
             </button>
             <button @click="router.push('/profile')" class="small-btn small-btn-blue" title="Carte de Dresseur">
-              <span class="retro-font small-btn-label">ID</span>
+              <span class="retro-font small-btn-label">Profil</span>
             </button>
           </div>
 
@@ -1062,11 +1062,11 @@ const closeDetails = () => {
 /* Small buttons */
 .small-buttons {
   display: flex;
-  gap: 10px;
+  gap: 5px;
 }
 
 .small-btn {
-  width: 42px; height: 16px;
+  width: 52px; height: 36px;
   border-radius: 8px;
   border: 2px solid;
   cursor: pointer;
@@ -1234,7 +1234,7 @@ const closeDetails = () => {
   .dpad-h { height: 20px; }
   .dpad-v { width: 20px; }
   .dpad-center { width: 20px; height: 20px; }
-  .small-btn { width: 28px; height: 13px; }
+  .small-btn { width: 30px; height: 20px; }
   .small-btn-label { font-size: 9px; }
   .speaker-hole { width: 18px; }
   .stats-display { font-size: 12px; gap: 4px; }

@@ -2,9 +2,6 @@ const Trainer = require('../models/trainerModel');
 
 const create = async (req, res) => {
     try {
-        // ТЕРМИНАЛ ПОКАЖЕТ, ЧТО ВНУТРИ req.user
-        console.log("Les données de token (req.user):", req.user);
-
         if (!req.user || !req.user.username) {
             return res.status(401).json({ error: "Username manquant dans le token !" });
         }
@@ -23,7 +20,7 @@ const create = async (req, res) => {
         await newTrainer.save();
         res.status(201).json(newTrainer);
     } catch (error) {
-        console.log("ПОЛНАЯ ОШИБКА:", error.message);
+        console.log("Erreur totale:", error.message);
         res.status(500).json({ error: error.message });
     }
 };
@@ -70,7 +67,7 @@ const deleteProfile = async (req, res) => {
 // PAjouter pokemon
 const markPokemon = async (req, res) => {
     try {
-        const { pokemonId, isCaptured } = req.body; // Параметр из ТЗ
+        const { pokemonId, isCaptured } = req.body;
 
         const trainer = await Trainer.findOne({ username: req.user.username });
         if (!trainer) return res.status(404).json({ error: "Trainer non trouvé" });
