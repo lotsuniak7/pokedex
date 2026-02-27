@@ -81,7 +81,7 @@ const addRegion = async (req, res) => {
 
 const deletePkmn = async (req, res) => {
     try {
-        const { id } = req.query;
+        const id = req.params.id;
         const deleted = await Pokemon.findByIdAndDelete(id);
         if (!deleted) {
             return res.status(404).json({ error: "Pokemon non trouvé" });
@@ -113,7 +113,7 @@ const getOne = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const { id } = req.query; // [cite: 93]
+        const id = req.params.id;
         if (!id) return res.status(400).json({ error: "ID requis" });
 
         // Mettre à jour que les champs qui ont été envoyés dans le corps de la requête

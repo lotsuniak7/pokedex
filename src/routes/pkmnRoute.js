@@ -12,8 +12,8 @@ router.get('/pkmn', pkmnController.getAllPokemons);
 
 // uniquement pour les admins
 router.post('/pkmn', adminCheck('ADMIN'), pkmnController.create);
-router.put('/pkmn', adminCheck('ADMIN'), pkmnController.update);
-router.delete('/pkmn', adminCheck('ADMIN'), pkmnController.delete);
+router.put('/pkmn/:id', adminCheck('ADMIN'), pkmnController.update);
+router.delete('/pkmn/:id', adminCheck('ADMIN'), pkmnController.delete);
 
 // demarches avec les regions
 router.post('/pkmn/region', adminCheck('ADMIN'), pkmnController.addRegion);
