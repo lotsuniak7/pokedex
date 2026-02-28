@@ -1087,7 +1087,7 @@ const closeDetails = () => {
   font-size: 11px;
   color: rgba(255,255,255,0.9);
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 /* D-Pad */
