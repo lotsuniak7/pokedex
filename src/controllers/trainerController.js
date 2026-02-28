@@ -72,14 +72,20 @@ const markPokemon = async (req, res) => {
         const trainer = await Trainer.findOne({ username: req.user.username });
         if (!trainer) return res.status(404).json({ error: "Trainer non trouvé" });
 
+        // S'assurer que les listes sont presentes
+        if (!trainer.pkmnCatch) trainer.pkmnCatch = [];
+        if (!trainer.pkmnSeen) trainer.pkmnSeen = [];
+
         if (isCaptured) {
             // Ajouter dans la liste "Catch"
-            if (!trainer.pkmnCatch.includes(pokemonId)) {
+            const alreadyCaught = trainer.pkmnCatch.some(id => id.toString() === pokemonId.toString());
+            if (!alreadyCaught) {
                 trainer.pkmnCatch.push(pokemonId);
             }
         } else {
             // Ajoute dans la liste des pokemons déjà vues
-            if (!trainer.pkmnSeen.includes(pokemonId)) {
+            const alreadySeen = trainer.pkmnSeen.some(id => id.toString() === pokemonId.toString());
+            if (!alreadySeen) {
                 trainer.pkmnSeen.push(pokemonId);
             }
         }
@@ -87,6 +93,7 @@ const markPokemon = async (req, res) => {
         await trainer.save();
         res.status(200).json(trainer);
     } catch (error) {
+        console.error("Erreur markPokemon:", error.message);
         res.status(500).json({ error: error.message });
     }
 };
