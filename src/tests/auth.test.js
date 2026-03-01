@@ -93,7 +93,7 @@ describe('API Pokedex - Tests d\'Intégration', () => {
     it('NE DOIT PAS autoriser un dresseur à supprimer un pokémon', async () => {
         const pkmn = await Pokemon.create({ name: 'Weedle', types: ['BUG'] });
         const res = await request(app)
-            .delete(`/api/pkmn?id=${pkmn._id}`)
+            .delete(`/api/pkmn/${pkmn._id}`)
             .set('Authorization', `Bearer ${trainerToken}`);
         expect(res.statusCode).toBe(403);
     });
@@ -123,7 +123,7 @@ describe('API Pokedex - Tests d\'Intégration', () => {
         expect(res.body.data[0].name).toBe('Charmander');
     });
 
-    it('DOIT supprimer una région spécifique d\'un pokémon', async () => {
+    it('DOIT supprimer une région spécifique d\'un pokémon', async () => {
         const pkmn = await Pokemon.create({
             name: 'Bulbasaur',
             types: ['GRASS'],
@@ -188,7 +188,8 @@ describe('API Pokedex - Tests d\'Intégration', () => {
         const Trainer = require('../models/trainerModel');
         await Trainer.create({ username: 'trainerTest', trainerName: 'Sacha' });
 
-        const pkmn = await Pokemon.create({ name: 'Pikachu', types: ['ELECTRIC'] });
+        // Ajout de l'id (ex: 25) car notre tableau pkmnCatch stocke maintenant des vrais nombres (identifiants Pokédex)
+        const pkmn = await Pokemon.create({ id: 25, name: 'Pikachu', types: ['ELECTRIC'] });
 
         const res = await request(app)
             .post('/api/trainer/mark')
@@ -199,14 +200,15 @@ describe('API Pokedex - Tests d\'Intégration', () => {
             });
 
         expect(res.statusCode).toBe(200);
-        expect(res.body.pkmnCatch).toContain(pkmn._id.toString());
+        expect(res.body.pkmnCatch).toContain(pkmn.id);
     });
 
     it('DOIT ajouter un Pokémon à la liste des vus (POST /trainer/mark)', async () => {
         const Trainer = require('../models/trainerModel');
         await Trainer.create({ username: 'trainerTest', trainerName: 'Sacha' });
 
-        const pkmn = await Pokemon.create({ name: 'Mewtwo', types: ['PSYCHIC'] });
+        // Ajout de l'id (ex: 150) pour éviter que pkmn.id soit undefined
+        const pkmn = await Pokemon.create({ id: 150, name: 'Mewtwo', types: ['PSYCHIC'] });
 
         const res = await request(app)
             .post('/api/trainer/mark')
@@ -217,7 +219,7 @@ describe('API Pokedex - Tests d\'Intégration', () => {
             });
 
         expect(res.statusCode).toBe(200);
-        expect(res.body.pkmnSeen).toContain(pkmn._id.toString());
+        expect(res.body.pkmnSeen).toContain(pkmn.id);
     });
 
     it('DOIT mettre à jour les informations du dresseur (PUT /trainer)', async () => {
