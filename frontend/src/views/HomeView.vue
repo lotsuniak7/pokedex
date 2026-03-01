@@ -1,7 +1,67 @@
 <template>
   <div class="pokedex-root">
 
-    <div class="pokedex-body">
+    <!-- ══════════════════════════════════════════════════════════
+         🎬 ANIMATION D'ENTRÉE — Pokéball s'ouvre, libère la lumière
+    ══════════════════════════════════════════════════════════ -->
+    <div v-if="showEntryAnim" class="entry-overlay">
+      <!-- Fond noir initial -->
+      <div class="ent-bg"></div>
+
+      <!-- Pokéball au centre qui s'ouvre -->
+      <div class="ent-ball-wrap">
+        <div class="ent-ball" :class="{ opening: entryPhase >= 1 }">
+          <div class="ent-ball-top"></div>
+          <div class="ent-ball-mid"></div>
+          <div class="ent-ball-bot"></div>
+          <div class="ent-ball-btn" :class="{ glow: entryPhase >= 2 }"></div>
+        </div>
+        <!-- Anneau de lumière autour de la ball -->
+        <div class="ent-halo" :class="{ pulse: entryPhase >= 2 }"></div>
+      </div>
+
+      <!-- Rayons de lumière qui explosent -->
+      <div class="ent-rays" :class="{ burst: entryPhase >= 2 }">
+        <div v-for="i in 12" :key="i" class="ent-ray" :style="`--r:${(i-1)*30}deg`"></div>
+      </div>
+
+      <!-- Anneaux qui se propagent -->
+      <div v-if="entryPhase >= 2" class="ent-rings">
+        <div class="ent-ring" style="animation-delay:0s"></div>
+        <div class="ent-ring" style="animation-delay:0.15s"></div>
+        <div class="ent-ring" style="animation-delay:0.3s"></div>
+      </div>
+
+      <!-- Flash final blanc → révèle le pokédex -->
+      <div class="ent-flash" :class="{ fire: entryPhase >= 3 }"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         🎬 ANIMATION DE SORTIE — Pokéball se referme, aspire la lumière
+    ══════════════════════════════════════════════════════════ -->
+    <div v-if="showExitAnim" class="exit-overlay">
+      <div class="ext-bg"></div>
+
+      <!-- Rayons qui convergent vers le centre -->
+      <div class="ext-rays" :class="{ converge: exitPhase >= 1 }">
+        <div v-for="i in 12" :key="i" class="ext-ray" :style="`--r:${(i-1)*30}deg`"></div>
+      </div>
+
+      <!-- Pokéball qui se referme -->
+      <div class="ext-ball-wrap" :class="{ closing: exitPhase >= 1 }">
+        <div class="ext-ball">
+          <div class="ext-ball-top"></div>
+          <div class="ext-ball-mid"></div>
+          <div class="ext-ball-bot"></div>
+          <div class="ext-ball-btn"></div>
+        </div>
+      </div>
+
+      <!-- Flash blanc de départ -->
+      <div class="ext-flash" :class="{ fire: exitPhase >= 2 }"></div>
+    </div>
+
+    <div class="pokedex-body" :class="{ 'content-hidden': showEntryAnim || showExitAnim }">
 
       <div class="pokedex-top-panel">
         <div class="pokedex-hinge-left"></div>
@@ -196,6 +256,11 @@
             <div class="dpad-arrow dpad-right">▶</div>
           </div>
 
+          <!-- Bouton RETOUR AU MONDE avec animation ranger le pokédex -->
+          <button class="btn-world retro-font" @click="goBackToWorld" title="Retour au monde">
+            MONDE
+          </button>
+
           <div class="speaker-grille">
             <div v-for="i in 7" :key="i" class="speaker-hole"></div>
           </div>
@@ -207,42 +272,62 @@
 </template>
 
 <script setup>
-/**
- * @file HomeView.vue
- * @description Vue principale de l'application (Le Pokédex interactif).
- * Gère l'affichage de la liste des Pokémon, le suivi de progression du dresseur
- * et l'expérience multimédia (Synthèse vocale + Cris des Pokémon).
- */
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { usePokemonStore } from '../store/pokemon';
 import { useTrainerStore } from '../store/trainer';
 import { useAuthStore } from '../store/auth';
 
-const router = useRouter();
+const router       = useRouter();
+const route        = useRoute();
 const pokemonStore = usePokemonStore();
 const trainerStore = useTrainerStore();
-const authStore = useAuthStore();
+const authStore    = useAuthStore();
 
-// Status de Activer/Desactiver la voix
+// ── Animations d'entrée ──────────────────────────────────────
+// N'affiche l'animation que si on vient du monde (via query param ou referrer)
+const showEntryAnim = ref(false);
+const entryPhase    = ref(0);
+
+// ── Animations de sortie ─────────────────────────────────────
+const showExitAnim = ref(false);
+const exitPhase    = ref(0);
+
+// ── États du composant ────────────────────────────────────────
 const isVoiceEnabled = ref(false);
-
-// Etat du modele
-const selectedPkmn = ref(null);
-
-// Gardons le son du cri afin de pouvoir l'arrêter
-let currentCry = null;
+const selectedPkmn   = ref(null);
+let currentCry       = null;
 
 onMounted(async () => {
+  // Lancer l'animation d'entrée seulement si on vient du monde
+  const fromWorld = route?.query?.from === 'world' || document.referrer.includes('/world');
+  if (fromWorld) {
+    showEntryAnim.value = true;
+    setTimeout(() => { entryPhase.value = 1; }, 100);   // ball appear
+    setTimeout(() => { entryPhase.value = 2; }, 600);   // ball opens + rays
+    setTimeout(() => { entryPhase.value = 3; }, 1100);  // flash final
+    setTimeout(() => { showEntryAnim.value = false; }, 1500);
+  }
+
   await trainerStore.fetchProfile();
   pokemonStore.fetchPokemons();
-
-  // demande au navigateur de charger les voix à l'avance
   window.speechSynthesis.getVoices();
 });
 
-const isCaught = (id) => trainerStore.caughtIds.includes(id);
-const isSeen = (id) => trainerStore.seenIds.includes(id);
+// ── Navigation retour vers le monde ──────────────────────────
+function goBackToWorld() {
+  showExitAnim.value = true;
+  exitPhase.value = 0;
+
+  setTimeout(() => { exitPhase.value = 1; }, 100);   // début fermeture
+  setTimeout(() => { exitPhase.value = 2; }, 700);   // flash
+  setTimeout(() => {
+    router.push('/world');
+  }, 1300);
+}
+
+const isCaught  = (id) => trainerStore.caughtIds.includes(id);
+const isSeen    = (id) => trainerStore.seenIds.includes(id);
 const isUnknown = (id) => !isCaught(id) && !isSeen(id);
 
 const markPokemon = async (id, isCaptured) => {
@@ -256,98 +341,348 @@ const markPokemon = async (id, isCaptured) => {
 
 const handleLogout = () => authStore.logout();
 
-// Activer/Desactiver le son
 const toggleVoice = () => {
   isVoiceEnabled.value = !isVoiceEnabled.value;
-
   if (!isVoiceEnabled.value) {
-    if (currentCry) {
-      currentCry.pause();
-      currentCry.currentTime = 0;
-    }
+    if (currentCry) { currentCry.pause(); currentCry.currentTime = 0; }
     window.speechSynthesis.cancel();
   }
 };
 
-// OUVRONS LA FENÊTRE MODAL ET LANCONS LE SON
 const openDetails = (pkmn) => {
   selectedPkmn.value = pkmn;
-
-  if (currentCry) {
-    currentCry.pause();
-    currentCry.currentTime = 0;
-  }
+  if (currentCry) { currentCry.pause(); currentCry.currentTime = 0; }
   window.speechSynthesis.cancel();
 
   if (isVoiceEnabled.value) {
-    // Télécharger le cri
     const cryUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${pkmn.id}.ogg`;
-
     currentCry = new Audio(cryUrl);
     currentCry.volume = 0.2;
 
-    // Preparons le texte
     const textToSpeak = `${pkmn.name}. ${pkmn.description || 'Description non disponible.'}`;
-
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = 'fr-FR';
-    utterance.pitch = 0.7;
-    utterance.rate = 1.0;
+    utterance.lang = 'fr-FR'; utterance.pitch = 0.7; utterance.rate = 1.0;
 
     const voices = window.speechSynthesis.getVoices();
     const frenchVoices = voices.filter(v => v.lang.startsWith('fr'));
-
     const premiumVoice = frenchVoices.find(v =>
-        v.name.includes('Google') ||
-        v.name.includes('Premium') ||
-        v.name.includes('Thomas') ||
-        v.name.includes('Amelie')
+        v.name.includes('Google') || v.name.includes('Premium') ||
+        v.name.includes('Thomas') || v.name.includes('Amelie')
     );
+    if (premiumVoice) utterance.voice = premiumVoice;
+    else if (frenchVoices.length > 0) utterance.voice = frenchVoices[0];
 
-    if (premiumVoice) {
-      utterance.voice = premiumVoice;
-      console.log('Une belle voix a été trouvée:', premiumVoice.name);
-    } else if (frenchVoices.length > 0) {
-      utterance.voice = frenchVoices[0];
-      console.log('Aucune bonne voix trouvée, utilisons la voix standard:', frenchVoices[0].name);
-    } else {
-      console.warn('Les voix françaises ne sont pas disponibles dans le système!');
-    }
-    // --------------------------
-
-    // Accrochons les auditeurs d'événements au lecteur
-    utterance.onstart = () => console.log('Le lecteur a COMMENCÉ à lire le texte.');
-    utterance.onend = () => console.log('Le lecteur a fini de lire le texte.');
-    utterance.onerror = (e) => console.error('Erreur du lecteur:', e);
-
-    // Événement : quand le cri s'arrête
-    currentCry.onended = () => {
-      window.speechSynthesis.speak(utterance);
-    };
-
-    // Lancer le cri
-    currentCry.play()
-        .then(() => console.log('Le cri a été reproduit avec succès.!'))
-        .catch(e => console.error('Erreur le navigateur a bloqué le cri. Raison :', e));
-
-  } else {
-    //console.log('Le son est coupé. Ouvrons le dossier en silence..');
+    currentCry.onended = () => window.speechSynthesis.speak(utterance);
+    currentCry.play().catch(e => console.error('Erreur cri:', e));
   }
 };
 
-// Fermer L'onglet
 const closeDetails = () => {
   selectedPkmn.value = null;
-  if (currentCry) {
-    currentCry.pause();
-    currentCry.currentTime = 0;
-  }
+  if (currentCry) { currentCry.pause(); currentCry.currentTime = 0; }
   window.speechSynthesis.cancel();
 };
 </script>
 
 <style scoped>
-/* ─── ROOT ─── */
+/* ─────────────────────────────────────────────────────────────
+   ANIMATIONS D'ENTRÉE — "Ouvrir le Pokédex"
+───────────────────────────────────────────────────────────── */
+.entry-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #0d1a0d 0%, #060606 100%);
+  animation: entryBgFade 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🎬 POKÉBALL ENTRY ANIMATION — la ball s'ouvre et libère la lumière
+════════════════════════════════════════════════════════════════ */
+.entry-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ent-bg {
+  position: absolute; inset: 0;
+  background: #000;
+  animation: entBgFade 1.6s ease forwards;
+}
+@keyframes entBgFade {
+  0%   { opacity: 1; }
+  70%  { opacity: 0.8; }
+  90%  { opacity: 0.1; }
+  100% { opacity: 0; }
+}
+
+/* La pokéball au centre */
+.ent-ball-wrap {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  animation: entBallBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+@keyframes entBallBounce {
+  0%   { transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
+  60%  { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.ent-ball {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #111;
+  box-shadow: 0 0 40px rgba(255,255,255,0.5), inset -8px -6px 0 rgba(0,0,0,0.2);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ent-ball.opening { transform: scale(1.3); }
+.ent-ball.opening .ent-ball-top { transform: translateY(-120%) rotate(-20deg); }
+.ent-ball.opening .ent-ball-bot { transform: translateY(120%) rotate(20deg); }
+.ent-ball.opening .ent-ball-btn { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+
+.ent-ball-top {
+  position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8888, #cc0000);
+  transition: transform 0.4s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ent-ball-bot {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+  background: radial-gradient(circle at 65% 65%, #fff, #ccc);
+  transition: transform 0.4s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ent-ball-mid {
+  position: absolute; top: calc(50% - 5px); left: 0; right: 0; height: 10px;
+  background: #111; z-index: 2;
+}
+.ent-ball-btn {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px; height: 24px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, #ddd);
+  border: 3px solid #111; z-index: 3;
+  transition: transform 0.3s 0.6s ease, opacity 0.3s 0.6s ease;
+}
+.ent-ball-btn.glow {
+  box-shadow: 0 0 20px 10px rgba(255,255,255,0.9);
+}
+
+/* Halo */
+.ent-halo {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px; height: 100px; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0);
+  transition: all 0.4s;
+}
+.ent-halo.pulse {
+  border-color: rgba(255,255,255,0.8);
+  box-shadow: 0 0 30px 10px rgba(255,200,100,0.6);
+  animation: entHaloPulse 0.5s ease-in-out infinite alternate;
+}
+@keyframes entHaloPulse {
+  from { box-shadow: 0 0 20px 5px rgba(255,200,100,0.4); }
+  to   { box-shadow: 0 0 50px 20px rgba(255,200,100,0.8); }
+}
+
+/* Rayons */
+.ent-rays {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0; height: 0;
+  pointer-events: none;
+}
+.ent-ray {
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 0;
+  background: linear-gradient(to top, rgba(255,220,100,0.9), transparent);
+  transform-origin: bottom center;
+  transform: rotate(var(--r)) translateY(-60px);
+  border-radius: 4px;
+  opacity: 0;
+  transition: none;
+}
+.ent-rays.burst .ent-ray {
+  animation: entRayBurst 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+.ent-rays.burst .ent-ray:nth-child(1)  { animation-delay: 0.0s; }
+.ent-rays.burst .ent-ray:nth-child(2)  { animation-delay: 0.03s; }
+.ent-rays.burst .ent-ray:nth-child(3)  { animation-delay: 0.06s; }
+.ent-rays.burst .ent-ray:nth-child(4)  { animation-delay: 0.09s; }
+.ent-rays.burst .ent-ray:nth-child(5)  { animation-delay: 0.12s; }
+.ent-rays.burst .ent-ray:nth-child(6)  { animation-delay: 0.15s; }
+.ent-rays.burst .ent-ray:nth-child(7)  { animation-delay: 0.18s; }
+.ent-rays.burst .ent-ray:nth-child(8)  { animation-delay: 0.21s; }
+.ent-rays.burst .ent-ray:nth-child(9)  { animation-delay: 0.24s; }
+.ent-rays.burst .ent-ray:nth-child(10) { animation-delay: 0.27s; }
+.ent-rays.burst .ent-ray:nth-child(11) { animation-delay: 0.30s; }
+.ent-rays.burst .ent-ray:nth-child(12) { animation-delay: 0.33s; }
+@keyframes entRayBurst {
+  0%   { height: 0;    opacity: 1; }
+  50%  { height: 180px; opacity: 0.9; }
+  100% { height: 250px; opacity: 0; }
+}
+
+/* Anneaux */
+.ent-rings {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ent-ring {
+  position: absolute; top: 0; left: 0;
+  width: 100px; height: 100px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 3px solid rgba(255,220,100,0.8);
+  animation: entRingExpand 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@keyframes entRingExpand {
+  0%   { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(5); opacity: 0; }
+}
+
+/* Flash final */
+.ent-flash {
+  position: absolute; inset: 0;
+  background: white; opacity: 0; pointer-events: none;
+}
+.ent-flash.fire { animation: entFlash 0.5s ease forwards; }
+@keyframes entFlash {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🎬 POKÉBALL EXIT ANIMATION — la ball aspire la lumière et part
+════════════════════════════════════════════════════════════════ */
+.exit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ext-bg {
+  position: absolute; inset: 0;
+  background: #000; opacity: 0;
+  animation: extBgFade 1.3s ease forwards;
+}
+@keyframes extBgFade {
+  0%   { opacity: 0; }
+  50%  { opacity: 0.6; }
+  90%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Rayons qui convergent vers le centre */
+.ext-rays {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.ext-ray {
+  position: absolute; top: 0; left: 0;
+  width: 4px; height: 250px;
+  background: linear-gradient(to top, rgba(255,220,100,0.9), transparent);
+  transform-origin: bottom center;
+  transform: rotate(var(--r)) translateY(-60px);
+  border-radius: 4px;
+  opacity: 0;
+}
+.ext-rays.converge .ext-ray { animation: extRayConverge 0.5s ease-in forwards; }
+.ext-rays.converge .ext-ray:nth-child(1)  { animation-delay: 0.0s; }
+.ext-rays.converge .ext-ray:nth-child(2)  { animation-delay: 0.02s; }
+.ext-rays.converge .ext-ray:nth-child(3)  { animation-delay: 0.04s; }
+.ext-rays.converge .ext-ray:nth-child(4)  { animation-delay: 0.06s; }
+.ext-rays.converge .ext-ray:nth-child(5)  { animation-delay: 0.08s; }
+.ext-rays.converge .ext-ray:nth-child(6)  { animation-delay: 0.10s; }
+.ext-rays.converge .ext-ray:nth-child(7)  { animation-delay: 0.12s; }
+.ext-rays.converge .ext-ray:nth-child(8)  { animation-delay: 0.14s; }
+.ext-rays.converge .ext-ray:nth-child(9)  { animation-delay: 0.16s; }
+.ext-rays.converge .ext-ray:nth-child(10) { animation-delay: 0.18s; }
+.ext-rays.converge .ext-ray:nth-child(11) { animation-delay: 0.20s; }
+.ext-rays.converge .ext-ray:nth-child(12) { animation-delay: 0.22s; }
+@keyframes extRayConverge {
+  0%   { height: 250px; opacity: 0.8; }
+  100% { height: 0;     opacity: 0; }
+}
+
+/* Pokéball au centre */
+.ext-ball-wrap {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  animation: extBallAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+@keyframes extBallAppear {
+  from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+.ext-ball-wrap.closing {
+  animation: extBallShoot 0.5s cubic-bezier(0.55, 0.05, 0.9, 0.3) 0.7s forwards;
+}
+@keyframes extBallShoot {
+  0%   { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: translate(50vw, -60vh) scale(0.2) rotate(720deg); opacity: 0; }
+}
+
+.ext-ball {
+  width: 80px; height: 80px; border-radius: 50%;
+  position: relative; overflow: hidden;
+  border: 4px solid #111;
+  box-shadow: 0 0 30px rgba(255,255,255,0.4), inset -6px -4px 0 rgba(0,0,0,0.2);
+}
+.ext-ball-top {
+  position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8888, #cc0000);
+}
+.ext-ball-bot {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+  background: radial-gradient(circle at 65% 65%, #fff, #ccc);
+}
+.ext-ball-mid {
+  position: absolute; top: calc(50% - 5px); left: 0; right: 0;
+  height: 10px; background: #111; z-index: 2;
+}
+.ext-ball-btn {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px; height: 20px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, #ddd);
+  border: 3px solid #111; z-index: 3;
+}
+
+.ext-flash {
+  position: absolute; inset: 0;
+  background: white; opacity: 0; pointer-events: none;
+}
+.ext-flash.fire { animation: extFlash 0.4s ease-out forwards; }
+@keyframes extFlash {
+  0%   { opacity: 0; }
+  30%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+/* Cache le contenu pendant les animations */
+.content-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LE RESTE DU CSS (identique à l'original)
+───────────────────────────────────────────────────────────── */
+
 .pokedex-root {
   width: 100vw;
   height: 100vh;
@@ -359,7 +694,6 @@ const closeDetails = () => {
   overflow: hidden;
 }
 
-/* ─── POKÉDEX BODY ─── */
 .pokedex-body {
   flex: 1;
   display: flex;
@@ -368,9 +702,9 @@ const closeDetails = () => {
   border: none;
   overflow: hidden;
   position: relative;
+  transition: opacity 0.2s;
 }
 
-/* Plastic texture */
 .pokedex-body::before {
   content: '';
   position: absolute;
@@ -380,7 +714,6 @@ const closeDetails = () => {
   z-index: 0;
 }
 
-/* Sheen highlight */
 .pokedex-body::after {
   content: '';
   position: absolute;
@@ -391,7 +724,6 @@ const closeDetails = () => {
   z-index: 0;
 }
 
-/* ─── TOP PANEL ─── */
 .pokedex-top-panel {
   position: relative;
   z-index: 1;
@@ -410,7 +742,6 @@ const closeDetails = () => {
   flex-shrink: 0;
 }
 
-/* ─── TOP-LEFT CLUSTER ─── */
 .top-left-cluster {
   display: flex;
   flex-direction: column;
@@ -481,7 +812,6 @@ const closeDetails = () => {
   50% { box-shadow: 0 0 18px rgba(255,0,0,0.9), 0 0 30px rgba(255,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.4); }
 }
 
-/* ─── TOP SCREEN (search) ─── */
 .top-screen-container {
   flex: 1;
 }
@@ -539,7 +869,6 @@ const closeDetails = () => {
   opacity: 0.7;
 }
 
-/* ─── DIVIDER ─── */
 .pokedex-divider {
   display: flex;
   align-items: center;
@@ -567,7 +896,6 @@ const closeDetails = () => {
   margin: 0 12px;
 }
 
-/* ─── BOTTOM PANEL ─── */
 .pokedex-bottom-panel {
   flex: 1;
   display: flex;
@@ -579,7 +907,6 @@ const closeDetails = () => {
   min-height: 0;
 }
 
-/* ─── BOTTOM LEFT (main screen) ─── */
 .bottom-left {
   flex: 1;
   display: flex;
@@ -614,7 +941,6 @@ const closeDetails = () => {
   box-shadow: inset 0 0 40px rgba(0,60,0,0.35);
 }
 
-/* ─── LOADING ─── */
 .loading-screen {
   flex: 1;
   display: flex;
@@ -651,7 +977,6 @@ const closeDetails = () => {
   100% { width: 100%; }
 }
 
-/* ─── POKEMON GRID ─── */
 .pokemon-grid {
   flex: 1;
   display: grid;
@@ -669,7 +994,6 @@ const closeDetails = () => {
 .pokemon-grid::-webkit-scrollbar-track { background: rgba(0,50,0,0.15); }
 .pokemon-grid::-webkit-scrollbar-thumb { background: #2f6f2f; border: 2px solid #7dc87d; border-radius: 4px; }
 
-/* ─── POKEMON CARD ─── */
 .pkmn-card {
   background: #a2dca2;
   border: 3px solid rgba(0,80,0,0.35);
@@ -704,23 +1028,17 @@ const closeDetails = () => {
   opacity: 0.85;
 }
 
-/* Status badge */
 .card-status {
   position: absolute;
   top: 4px;
   right: 6px;
 }
 
-.badge {
-  font-size: 14px;
-  line-height: 1;
-}
-
+.badge { font-size: 14px; line-height: 1; }
 .badge-caught { color: #c09000; filter: drop-shadow(0 0 3px rgba(255,180,0,0.6)); }
 .badge-seen { font-size: 11px; }
 .badge-unknown { color: #666; font-family: 'VT323', monospace; font-size: 16px; }
 
-/* ID */
 .card-id {
   font-size: clamp(14px, 1.8vw, 18px);
   color: #1a5a1a;
@@ -729,7 +1047,6 @@ const closeDetails = () => {
   margin-bottom: 4px;
 }
 
-/* Image */
 .card-image-wrap {
   background: rgba(210,240,210,0.6);
   border: 2px solid rgba(0,80,0,0.2);
@@ -752,13 +1069,8 @@ const closeDetails = () => {
   image-rendering: pixelated;
 }
 
-.pkmn-card:not(.card-unknown):hover .card-image {
-  transform: scale(1.12);
-}
-
-.image-silhouette {
-  filter: brightness(0) contrast(200%) opacity(0.75) !important;
-}
+.pkmn-card:not(.card-unknown):hover .card-image { transform: scale(1.12); }
+.image-silhouette { filter: brightness(0) contrast(200%) opacity(0.75) !important; }
 
 .card-caught-overlay {
   position: absolute;
@@ -767,7 +1079,6 @@ const closeDetails = () => {
   pointer-events: none;
 }
 
-/* Name */
 .card-name {
   font-size: clamp(16px, 2.2vw, 22px);
   color: #1a4a1a;
@@ -781,7 +1092,6 @@ const closeDetails = () => {
   margin-bottom: 4px;
 }
 
-/* Types */
 .card-types {
   display: flex;
   gap: 4px;
@@ -802,8 +1112,6 @@ const closeDetails = () => {
 }
 
 .type-unknown { color: #556a55; background: transparent; border-color: transparent; letter-spacing: 0.15em; }
-
-/* Type colors */
 .type-feu    { background: rgba(220,60,0,0.18); color: #8b2000; border-color: rgba(220,60,0,0.3); }
 .type-eau    { background: rgba(0,100,220,0.15); color: #003880; border-color: rgba(0,100,220,0.3); }
 .type-plante { background: rgba(0,150,40,0.15); color: #004020; border-color: rgba(0,150,40,0.3); }
@@ -811,11 +1119,7 @@ const closeDetails = () => {
 .type-vol    { background: rgba(80,120,200,0.15); color: #203080; border-color: rgba(80,120,200,0.3); }
 .type-normal { background: rgba(100,100,80,0.15); color: #404030; border-color: rgba(100,100,80,0.3); }
 
-/* Actions */
-.card-actions {
-  width: 100%;
-  margin-top: auto;
-}
+.card-actions { width: 100%; margin-top: auto; }
 
 .btn-action {
   width: 100%;
@@ -831,21 +1135,15 @@ const closeDetails = () => {
 .btn-action:active { transform: translateY(2px); }
 
 .btn-encounter {
-  background: #3060c0;
-  color: white;
-  border-color: #1a3a80;
-  box-shadow: 0 3px 0 #1a3a80;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  background: #3060c0; color: white; border-color: #1a3a80;
+  box-shadow: 0 3px 0 #1a3a80; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 .btn-encounter:hover { background: #4070d0; }
 .btn-encounter:active { box-shadow: none; }
 
 .btn-catch {
-  background: #cc2020;
-  color: white;
-  border-color: #7a0000;
-  box-shadow: 0 3px 0 #7a0000;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  background: #cc2020; color: white; border-color: #7a0000;
+  box-shadow: 0 3px 0 #7a0000; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   animation: catch-pulse 1.2s ease-in-out infinite;
 }
 .btn-catch:hover { background: #dd3030; }
@@ -866,7 +1164,6 @@ const closeDetails = () => {
   letter-spacing: 0.06em;
 }
 
-/* ─── MODAL DETAILS ─── */
 .pkmn-modal-overlay {
   position: absolute;
   inset: 0;
@@ -902,13 +1199,7 @@ const closeDetails = () => {
   padding-bottom: 4px;
 }
 
-.btn-close {
-  background: transparent;
-  border: none;
-  color: #cc2020;
-  cursor: pointer;
-  font-weight: bold;
-}
+.btn-close { background: transparent; border: none; color: #cc2020; cursor: pointer; font-weight: bold; }
 .btn-close:hover { transform: scale(1.2); }
 
 .modal-image {
@@ -928,11 +1219,7 @@ const closeDetails = () => {
   margin-bottom: 8px;
 }
 
-.modal-types {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
-}
+.modal-types { display: flex; gap: 6px; margin-bottom: 16px; }
 
 .modal-desc {
   font-size: clamp(14px, 2vw, 18px);
@@ -946,17 +1233,10 @@ const closeDetails = () => {
   width: 100%;
 }
 
-/* ─── SCREEN OVERLAYS ─── */
 .scanlines-overlay {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-      0deg,
-      rgba(0,0,0,0.06) 0px,
-      rgba(0,0,0,0.06) 1px,
-      transparent 1px,
-      transparent 3px
-  );
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px);
   pointer-events: none;
   z-index: 20;
 }
@@ -969,7 +1249,6 @@ const closeDetails = () => {
   z-index: 21;
 }
 
-/* ─── SCREEN BOTTOM DECO ─── */
 .screen-bottom-deco {
   display: flex;
   align-items: center;
@@ -986,17 +1265,8 @@ const closeDetails = () => {
 
 .deco-red { background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000); }
 
-.deco-lines {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.deco-line {
-  width: 20px; height: 2px;
-  background: rgba(0,0,0,0.3);
-  border-radius: 1px;
-}
+.deco-lines { display: flex; flex-direction: column; gap: 3px; }
+.deco-line { width: 20px; height: 2px; background: rgba(0,0,0,0.3); border-radius: 1px; }
 
 .stats-display {
   display: flex;
@@ -1012,7 +1282,6 @@ const closeDetails = () => {
 .stat-caught { color: #ffd060; }
 .stat-sep { color: rgba(255,255,255,0.4); }
 
-/* ─── CONTROLS PANEL ─── */
 .controls-panel {
   width: 110px;
   flex-shrink: 0;
@@ -1024,16 +1293,12 @@ const closeDetails = () => {
   gap: 0;
 }
 
-/* Voice button */
 .btn-voice {
   width: 62px; height: 62px;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #6090ee, #2040b0 70%, #102080 100%);
   border: 4px solid #0a1a60;
-  box-shadow:
-      0 5px 0 #0a1a60,
-      0 7px 15px rgba(0,0,0,0.5),
-      inset 0 3px 5px rgba(255,255,255,0.3);
+  box-shadow: 0 5px 0 #0a1a60, 0 7px 15px rgba(0,0,0,0.5), inset 0 3px 5px rgba(255,255,255,0.3);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1065,11 +1330,7 @@ const closeDetails = () => {
   100% { transform: scale(1.6); opacity: 0; }
 }
 
-/* Small buttons */
-.small-buttons {
-  display: flex;
-  gap: 5px;
-}
+.small-buttons { display: flex; gap: 5px; }
 
 .small-btn {
   width: 52px; height: 36px;
@@ -1084,7 +1345,6 @@ const closeDetails = () => {
 }
 
 .small-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.4); }
-
 .small-btn-red { background: linear-gradient(180deg, #ff6060, #cc1a1a); border-color: #7a0000; }
 .small-btn-blue { background: linear-gradient(180deg, #6090ee, #1a40cc); border-color: #0a1a7a; }
 
@@ -1096,7 +1356,25 @@ const closeDetails = () => {
   letter-spacing: 0.03em;
 }
 
-/* D-Pad */
+/* ── Bouton Monde ── */
+.btn-world {
+  width: 88px;
+  padding: 7px 4px;
+  border-radius: 8px;
+  border: 2px solid #166534;
+  background: linear-gradient(180deg, #4ade80, #16a34a);
+  color: #0a1a0a;
+  font-family: 'VT323', monospace;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #14532d;
+  transition: all 0.1s;
+  flex-shrink: 0;
+}
+.btn-world:hover { background: linear-gradient(180deg, #86efac, #4ade80); }
+.btn-world:active { transform: translateY(2px); box-shadow: 0 1px 0 #14532d; }
+
 .dpad {
   width: 88px; height: 88px;
   position: relative;
@@ -1110,17 +1388,8 @@ const closeDetails = () => {
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4);
 }
 
-.dpad-h {
-  left: 0; top: 50%;
-  width: 100%; height: 30px;
-  transform: translateY(-50%);
-}
-
-.dpad-v {
-  top: 0; left: 50%;
-  width: 30px; height: 100%;
-  transform: translateX(-50%);
-}
+.dpad-h { left: 0; top: 50%; width: 100%; height: 30px; transform: translateY(-50%); }
+.dpad-v { top: 0; left: 50%; width: 30px; height: 100%; transform: translateX(-50%); }
 
 .dpad-center {
   position: absolute;
@@ -1147,7 +1416,6 @@ const closeDetails = () => {
 .dpad-left { left: 4px; top: 50%; transform: translateY(-50%); }
 .dpad-right { right: 4px; top: 50%; transform: translateY(-50%); }
 
-/* Speaker grille */
 .speaker-grille {
   display: flex;
   flex-direction: column;
@@ -1164,7 +1432,6 @@ const closeDetails = () => {
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
 }
 
-/* ─── ANIMATIONS ─── */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -1172,9 +1439,6 @@ const closeDetails = () => {
 
 .retro-font { font-family: 'VT323', monospace; letter-spacing: 0.05em; }
 
-/* ─── RESPONSIVE ─── */
-
-/* Large desktop: 3 cols for grid */
 @media (min-width: 1200px) {
   .pokemon-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px; }
   .card-image { width: 250px; height: 250px; }
@@ -1184,32 +1448,20 @@ const closeDetails = () => {
   .pokedex-top-panel { padding: 14px 20px 10px; min-height: 100px; }
 }
 
-/* Medium desktop: 2 cols */
 @media (min-width: 768px) and (max-width: 1199px) {
   .pokemon-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .card-image { width: 150px; height: 150px; }
   .controls-panel { width: 120px; }
 }
 
-/* Tablet */
 @media (max-width: 767px) {
-  .pokedex-top-panel {
-    padding: 8px 10px 6px;
-    min-height: 68px;
-  }
+  .pokedex-top-panel { padding: 8px 10px 6px; min-height: 68px; }
   .big-lens { width: 50px; height: 50px; }
   .indicator-dots { gap: 4px; }
   .dot { width: 10px; height: 10px; }
   .top-left-cluster { margin-right: 10px; }
-
   .pokedex-bottom-panel { padding: 8px 10px 10px; gap: 0; }
-
-  .pokemon-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 7px;
-    padding: 8px;
-  }
-
+  .pokemon-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; padding: 8px; }
   .card-image { width: 100px; height: 100px; }
   .controls-panel { width: 80px; }
   .btn-voice { width: 50px; height: 50px; }
@@ -1218,17 +1470,13 @@ const closeDetails = () => {
   .dpad-h { height: 24px; }
   .dpad-v { width: 24px; }
   .small-btn { width: 34px; }
+  .btn-world { width: 72px; font-size: 11px; }
   .speaker-grille { gap: 4px; }
   .speaker-hole { width: 22px; height: 3px; }
 }
 
-/* Mobile small */
 @media (max-width: 480px) {
-  .pokemon-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    padding: 6px;
-  }
+  .pokemon-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 6px; }
   .card-image { width: 80px; height: 80px; }
   .pkmn-card { padding: 7px 6px 6px; }
   .card-name { font-size: 15px; }
@@ -1242,6 +1490,7 @@ const closeDetails = () => {
   .dpad-center { width: 20px; height: 20px; }
   .small-btn { width: 30px; height: 20px; }
   .small-btn-label { font-size: 9px; }
+  .btn-world { width: 60px; font-size: 10px; padding: 5px 2px; }
   .speaker-hole { width: 18px; }
   .stats-display { font-size: 12px; gap: 4px; }
 }
