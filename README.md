@@ -142,3 +142,33 @@ Si toutes les étapes ont été suivies correctement :
 * ✅ La base MongoDB est connectée et opérationnelle
 
 Vous pouvez maintenant utiliser l’application localement.
+
+
+
+## Exécution des tests
+
+Il est fortement recommandé de lancer les tests pour s'assurer que l'environnement est prêt.
+
+### 🔹 Tests Backend (Unitaires & API)
+
+Assurez-vous que MongoDB est lancé, puis dans le dossier pokedex :
+
+```bash
+npm test
+
+npm run test:coverage
+```
+
+### 🔹 Tests Frontend (E2E avec Playwright)
+
+Si vous lancez les tests pour la première fois, installez d'abord les navigateurs de test :
+
+```bash
+npx playwright install
+```
+
+Ensuite, lancez les tests (le frontend doit être en cours d'exécution npm run dev) :
+
+```bash
+npx playwright test
+```
