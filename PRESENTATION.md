@@ -48,3 +48,10 @@ Application complète de gestion Pokémon – Frontend + Backend moderne
 - Animations CSS + transitions Vue
 - Web Speech API + lecture des cris Pokémon
 
+## La partie "Monde" - un test
+
+L'essentiel du projet a déjà été réalisé et tout est testé via le Pokédex et le profil (avec l'interface d'administration).
+Mais j'ai décidé d'ajouter simplement pour le plaisir
+
+Dans le monde, nous devons chercher des boîtes dans lesquelles nous pouvons obtenir des Pokémon. 
+Ceux que nous avons feuilletés sont ajoutés à ceux que nous avons déjà vus, et ceux que nous avons attrapés sont ajoutés aux Pokémon capturés. 
