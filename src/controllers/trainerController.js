@@ -1,4 +1,5 @@
 const Trainer = require('../models/trainerModel');
+const Pokemon = require('../models/pkmnModel');
 
 const create = async (req, res) => {
     try {
@@ -64,10 +65,20 @@ const deleteProfile = async (req, res) => {
     }
 };
 
-// PAjouter pokemon
+// Ajouter pokemon
 const markPokemon = async (req, res) => {
     try {
-        const { pokemonId, isCaptured } = req.body;
+        const { isCaptured } = req.body;
+        let pokemonId = req.body.pokemonId;
+
+        // 🧙‍♂️ Si la requete est de test (24 chiffres)
+        if (String(pokemonId).length === 24) {
+            const pkmn = await Pokemon.findById(pokemonId);
+            if (pkmn) pokemonId = pkmn.id;
+        } else {
+            // Si la requete de Front
+            pokemonId = Number(pokemonId);
+        }
 
         const trainer = await Trainer.findOne({ username: req.user.username });
         if (!trainer) return res.status(404).json({ error: "Trainer non trouvé" });
