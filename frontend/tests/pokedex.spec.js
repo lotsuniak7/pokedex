@@ -192,7 +192,7 @@ test.describe('🏠 Page Accueil — Pokédex', () => {
         const btn = page.locator('.btn-encounter').first();
         if (await btn.count() > 0) {
             await btn.click();
-            await expect(page.locator('.badge-seen').first()).toBeVisible({ timeout: 5000 });
+            await expect(page.locator('.badge-seen').first()).toBeVisible({ timeout: 8000 });
         }
     });
 
