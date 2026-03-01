@@ -1,3 +1,11 @@
+/**
+ * @file auth.test.js
+ * @description Suite de tests d'intégration pour l'API Pokédex.
+ * Vérifie le bon fonctionnement des routes d'authentification, de la gestion
+ * des profils Dresseurs et des opérations CRUD sur les Pokémon.
+ * Utilise une base de données isolée en mémoire pour ne pas altérer la production.
+ */
+
 const request = require('supertest');
 const app = require('../app');
 const mongoose = require('mongoose');
