@@ -1,7 +1,7 @@
 <template>
   <div class="auth-root">
 
-    <!-- ✨ Transition overlay — mounts after login success -->
+    <!-- Transition overlay — mounts after login success -->
     <PokedexTransition v-if="showTransition" />
 
     <div class="ambient-glow"></div>
@@ -125,39 +125,65 @@
 </template>
 
 <script setup>
+/**
+ * @file LoginView.vue
+ * @description Composant gérant l'accès à l'application.
+ * Fournit une interface double (Connexion / Inscription) et déclenche
+ * une animation de transition cinématique (PokedexTransition) en cas de succès.
+ */
 import { ref, reactive } from 'vue';
 import { useAuthStore } from '../store/auth';
 import PokedexTransition from '../components/PokedexTransition.vue';
 
 const authStore = useAuthStore();
 
-const isLogin        = ref(true);
-const errorMsg       = ref('');
-const isLoading      = ref(false);
-const showPassword   = ref(false);
-const focusedField   = ref(null);
-const showTransition = ref(false);  // ← triggers the cinematic animation
+// ── ÉTATS RÉACTIFS ───────────────────────────────────────────────
+const isLogin        = ref(true);          // Mode actuel : Connexion (true) ou Inscription (false)
+const errorMsg       = ref('');            // Message d'erreur localisé
+const isLoading      = ref(false);         // État de chargement (désactive le bouton pendant l'appel API)
+const showPassword   = ref(false);         // Affichage du mot de passe en clair
+const focusedField   = ref(null);          // Champ actuellement focalisé (pour les effets de style)
+const showTransition = ref(false);         // Déclenche l'animation de fermeture du Pokédex
 
+/** * Données du formulaire d'authentification
+ * @type {Object}
+ */
 const form = reactive({ username: '', password: '' });
 
+/**
+ * Alterne entre le mode Connexion et le mode Inscription.
+ * Réinitialise les erreurs et les états visuels.
+ */
 const toggleMode = () => {
   isLogin.value      = !isLogin.value;
   errorMsg.value     = '';
   showPassword.value = false;
 };
 
+/**
+ * Traite la soumission du formulaire.
+ * Communique avec le store Pinia pour l'authentification.
+ * En cas de succès, déclenche la transition visuelle vers l'accueil.
+ * @async
+ * @function handleSubmit
+ */
 const handleSubmit = async () => {
   errorMsg.value  = '';
   isLoading.value = true;
   try {
     if (isLogin.value) {
+      // Tentative de connexion
       await authStore.login(form.username, form.password);
     } else {
+      // Tentative d'inscription (suivie d'une connexion automatique dans le store)
       await authStore.register(form.username, form.password);
     }
 
-    // ✅ Auth succeeded — launch the flip animation!
-    // PokedexTransition handles router.push('/') itself after animation ends.
+    /** * AUTHENTIFICATION RÉUSSIE
+     * On active le composant de transition.
+     * Ce dernier gère visuellement la fermeture du Pokédex et effectue
+     * le router.push('/') automatiquement à la fin de son animation.
+     */
     showTransition.value = true;
 
   } catch {

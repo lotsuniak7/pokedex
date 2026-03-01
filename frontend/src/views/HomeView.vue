@@ -207,6 +207,12 @@
 </template>
 
 <script setup>
+/**
+ * @file HomeView.vue
+ * @description Vue principale de l'application (Le Pokédex interactif).
+ * Gère l'affichage de la liste des Pokémon, le suivi de progression du dresseur
+ * et l'expérience multimédia (Synthèse vocale + Cris des Pokémon).
+ */
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePokemonStore } from '../store/pokemon';

@@ -450,6 +450,12 @@
 </template>
 
 <script setup>
+/**
+ * @file ProfileView.vue
+ * @description Logique du composant Profil.
+ * Gère l'affichage du profil dresseur, les statistiques de complétion du Pokédex,
+ * et fournit une interface d'administration complète (CRUD) pour les administrateurs.
+ */
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTrainerStore } from '../store/trainer';
@@ -461,12 +467,18 @@ const trainerStore = useTrainerStore();
 const authStore    = useAuthStore();
 const pokemonStore = usePokemonStore();
 
-// ── Admin check ──────────────────────────────────────
+// ── VÉRIFICATION DES DROITS ADMIN ────────────────────────────────
+/**
+ * Détermine si l'utilisateur possède le rôle ADMIN.
+ * Vérifie d'abord le store, puis décode le payload du JWT dans le localStorage par sécurité.
+ * @type {import('vue').ComputedRef<boolean>}
+ */
 const isAdmin = computed(() => {
   if (authStore.user?.isAdmin === true || authStore.user?.role === 'ADMIN') return true;
   try {
     const token = localStorage.getItem('token');
     if (!token) return false;
+    // Décodage du Base64 du token pour lire les claims sans librairie externe
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.isAdmin === true || payload.role === 'ADMIN';
   } catch { return false; }
@@ -481,10 +493,16 @@ const imgError    = ref(false);
 const avatarError = ref(false);
 const form        = reactive({ trainerName: '', imgUrl: '' });
 
+/** Calcul des statistiques de progression */
 const seenPct   = computed(() => Math.round((trainerStore.seenIds.length / TOTAL) * 100));
 const caughtPct = computed(() => Math.round((trainerStore.caughtIds.length / TOTAL) * 100));
+
+/** Génère des initiales si aucune image de profil n'est disponible */
 const initials  = computed(() => (trainerStore.profile?.trainerName ?? '').slice(0,2).toUpperCase() || '??');
 
+/**
+ * Enregistre le profil dresseur initial.
+ */
 const handleCreateProfile = async () => {
   if (!form.trainerName.trim()) return;
   await trainerStore.createProfile(form.trainerName, form.imgUrl);
@@ -505,13 +523,14 @@ const activeTypes = ref([]);
 const PAGE_SIZE   = 18;
 const currentPage = ref(1);
 
-// All unique types from all pokemon
+/** Liste de tous les types uniques existants dans la base pour les filtres */
 const allTypes = computed(() => {
   const s = new Set();
   pokemonStore.pokemons.forEach(p => p.types?.forEach(t => s.add(t)));
   return [...s].sort();
 });
 
+/** Active ou désactive un filtre de type */
 const toggleType = (t) => {
   const idx = activeTypes.value.indexOf(t);
   if (idx >= 0) activeTypes.value.splice(idx, 1);
@@ -519,9 +538,12 @@ const toggleType = (t) => {
   currentPage.value = 1;
 };
 
-// Reset page on filter change
+// Réinitialise la page si les filtres changent
 watch([searchQuery, activeTypes], () => { currentPage.value = 1; }, { deep: true });
 
+/**
+ * Liste filtrée selon le nom, l'ID, le type et les filtres actifs.
+ */
 const filteredList = computed(() => {
   let list = pokemonStore.pokemons;
   const q = searchQuery.value.toLowerCase().trim();
@@ -536,13 +558,16 @@ const filteredList = computed(() => {
   return list;
 });
 
+/** Calcul de la pagination */
 const totalPages  = computed(() => Math.max(1, Math.ceil(filteredList.value.length / PAGE_SIZE)));
 const paginatedList = computed(() => {
   const start = (currentPage.value - 1) * PAGE_SIZE;
   return filteredList.value.slice(start, start + PAGE_SIZE);
 });
 
-// Smart page numbers: 1 … 4 5 6 … 12
+/**
+ * Logique de pagination "intelligente" avec ellipses
+ */
 const pageNumbers = computed(() => {
   const total = totalPages.value;
   const cur   = currentPage.value;
@@ -559,12 +584,15 @@ const pageNumbers = computed(() => {
   return result;
 });
 
-// Form helpers
+/** Getter/Setter pour transformer la chaîne des types en tableau */
 const formTypes = computed({
   get: ()    => aForm.value.types.join(', '),
   set: (val) => { aForm.value.types = val.split(',').map(t => t.trim()).filter(Boolean); }
 });
 
+/**
+ * Soumet le formulaire (Création ou Mise à jour).
+ */
 const handleSubmit = async () => {
   try {
     if (isEditing.value) await pokemonStore.updatePokemon(editingMongoId.value, aForm.value);
@@ -576,6 +604,7 @@ const handleSubmit = async () => {
   }
 };
 
+/** Prépare le formulaire pour l'édition d'un Pokémon existant */
 const editPokemon = (pkmn) => {
   isEditing.value      = true;
   editingMongoId.value = pkmn._id;
@@ -583,6 +612,7 @@ const editPokemon = (pkmn) => {
   activeTab.value = 'form';
 };
 
+/** Confirme et exécute la suppression */
 const confirmDelete = async () => {
   await pokemonStore.deletePokemon(confirmId.value);
   confirmId.value = null;
@@ -593,6 +623,7 @@ const resetForm = () => {
   aForm.value = { id: '', name: '', types: [], imageUrl: '', description: '' };
 };
 
+/** Initialisation au montage du composant */
 onMounted(async () => {
   await trainerStore.fetchProfile();
   if (isAdmin.value) pokemonStore.fetchPokemons();

@@ -181,6 +181,12 @@
 </template>
 
 <script setup>
+/**
+ * @file PokedexTransition.vue
+ * @description Composant de transition cinématique "Boot Sequence".
+ * Orchestre une animation complexe en 5 phases (flip 3D, flash, déploiement,
+ * et séquence de boot textuelle) pour simuler l'allumage du Pokédex.
+ */
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
