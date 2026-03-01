@@ -61,25 +61,11 @@ npm install
 
 ## 2. Préparation de la base de données
 
-Deux options s’offrent à vous :
-
-
-
-### Option A : Utiliser les données fournies (Recommandé)
-
-
-
+D'abord lancez le MongoDB
 ```bash
-cd mongo/bin
 ./mongod --dbpath "../data"
 
 ```
-
----
-
-### Option B : Utilisation votre propre MongoDB
-
-D'abord lancez le MongoDB
 
 Aprés pour fournir la base, il vous faudra de lancer un script qui permet de :
 
@@ -136,19 +122,14 @@ http://localhost:5173
 
 ---
 
-## 👤 Comptes de test
+## 👤 Compte Admin de test
 
-Vous pouvez utiliser les comptes suivants pour tester l’application :
+Vous pouvez utiliser le compte suivant pour tester l’application en tant qu'admin:
 
 ### Administrateur
 
-* **Identifiant :** `root`
-* **Mot de passe :** `root`
-
-### Utilisateur
-
-* **Identifiant :** `ivan`
-* **Mot de passe :** `ivan`
+* **Identifiant :** `admin`
+* **Mot de passe :** `admin`
 
 ---
 

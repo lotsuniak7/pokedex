@@ -1,13 +1,14 @@
 /**
  * @file seed.js
  * @description Script utilitaire de peuplement (Seeder) de la base de données.
- * Récupère les données officielles depuis l'API publique PokéAPI, les traduit en français,
- * et initialise la collection MongoDB avec les 151 premiers Pokémon (Génération 1).
- * Idéal pour configurer rapidement un environnement de développement local.
+ * 1. Initialise les 151 Pokémon via PokéAPI.
+ * 2. Crée un compte Administrateur par défaut pour les tests.
  */
 
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 const Pokemon = require('./src/models/pkmnModel');
+const User = require('./src/models/userModel');
 
 /**
  * @constant {string} MONGO_URI - L'URI de connexion à la base de données locale.
@@ -42,7 +43,9 @@ async function seedDatabase() {
         console.log('✅ Connexion à MongoDB réussie. Nettoyage de la base...');
 
         // Vider les anciennes données pour éviter les doublons (Drop)
+        console.log('🧹 Nettoyage de la base de données...');
         await Pokemon.deleteMany({});
+        await User.deleteMany({}); // On vide aussi les utilisateurs pour repartir à zéro
 
         console.log('Téléchargement des 151 premiers Pokémon depuis PokeAPI... (Cela peut prendre une minute)');
 
@@ -103,6 +106,23 @@ async function seedDatabase() {
 
         console.log('Succès ! 151 Pokémon ont été ajoutés à ton Pokédex.');
         process.exit(0);
+
+        console.log('Création du compte Administrateur par défaut...');
+
+        const adminPassword = 'admin'; // Mot de passe simple pour le correcteur
+        const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
+
+        await User.create({
+            username: 'admin',
+            password: hashedAdminPassword,
+            role: 'ADMIN' // On lui donne directement le rôle admin
+        });
+
+        console.log('-----------------------------------------------');
+        console.log('SEEDING TERMINÉ AVEC SUCCÈS !');
+        console.log(`Login Admin : admin`);
+        console.log(`Pass Admin  : admin`);
+        console.log('-----------------------------------------------');
     } catch (error) {
         console.error('\nErreur lors du seed:', error);
         process.exit(1);
