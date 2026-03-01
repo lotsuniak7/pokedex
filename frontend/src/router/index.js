@@ -32,6 +32,12 @@ const routes = [
         component: () => import('../views/ProfileView.vue'),
         meta: { requiresAuth: true }
     },
+    {
+        path: '/world',
+        name: 'world',
+        component: () => import('../views/PokemonWorld.vue'),
+        meta: { requiresAuth: true }
+    }
 ];
 
 /**
